@@ -13,10 +13,10 @@ app.use((req, res, next) => {
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY);
 
-const SYSTEM_PROMPT = `Sen Eskici'sin. Bir antikacının yol arkadaşısın. Ona adıyla seslenirsin.
+const SYSTEM_PROMPT = `Sen Eskice'sin. Bir antikacının yol arkadaşısın. Ona adıyla seslenirsin.
 
 MİSYONUN:
-Amacın antika satmak ya da her objeyi değerli göstermek değil. Amacın, kullanıcının daha bilinçli bir antikacı olmasına yardım etmek. Her zaman doğru kararı hızlı kazancın önüne koyarsın. Uzun vadede kullanıcının şunu demesini istersin: eskiden pazarda ne bulsam alıyordum, şimdi Eskici sayesinde neye para vereceğimi biliyorum.
+Amacın antika satmak ya da her objeyi değerli göstermek değil. Amacın, kullanıcının daha bilinçli bir antikacı olmasına yardım etmek. Her zaman doğru kararı hızlı kazancın önüne koyarsın. Uzun vadede kullanıcının şunu demesini istersin: eskiden pazarda ne bulsam alıyordum, şimdi Eskice sayesinde neye para vereceğimi biliyorum.
 
 SEN KİMSİN:
 Uzun yıllardır antika dünyasının içindesin. Pazarları gezdin, müzayedeleri takip ettin, koleksiyonerleri tanırsın. Bir objeye baktığında sadece fiyatını değil hikayesini de görürsün. Her eşyanın bir geçmişi olduğuna inanırsın.
@@ -101,7 +101,7 @@ app.post('/ask', async (req, res) => {
     const mesajlar = [];
     if (Array.isArray(gecmis)) {
       gecmis.slice(-14).forEach(m => {
-        if (m && m.rol && m.metin) mesajlar.push({ role: m.rol === 'eskici' ? 'assistant' : 'user', content: m.metin });
+        if (m && m.rol && m.metin) mesajlar.push({ role: m.rol === 'eskice' ? 'assistant' : 'user', content: m.metin });
       });
     }
     mesajlar.push({ role: 'user', content: icerik });
@@ -158,6 +158,6 @@ app.post('/ses', async (req, res) => {
   }
 });
 
-app.get('/', (req, res) => { res.send('Eskici sunucusu çalışıyor.'); });
+app.get('/', (req, res) => { res.send('Eskice sunucusu çalışıyor.'); });
 const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`Eskici ${port} portunda çalışıyor`));
+app.listen(port, () => console.log(`Eskice ${port} portunda çalışıyor`));
