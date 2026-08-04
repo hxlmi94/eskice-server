@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eskice</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0e0c0d;--panel:#181314;--panel2:#201719;--line:#352529;--gold:#c9a24b;--gold2:#e2c477;--text:#ece4dd;--muted:#9c8f88}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1000px 500px at 70% -10%,#1d1416,#0e0c0d 60%);color:var(--text);font-family:'Jost',sans-serif;font-weight:300;height:100vh;display:flex;flex-direction:column}
+  header{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#1a1314,#0e0c0d)}
+  .logo{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--gold);letter-spacing:3px}
+  .sub{font-size:11px;color:var(--muted);letter-spacing:2px}
+  #chat{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;max-width:800px;margin:0 auto;width:100%}
+  .msg{padding:12px 16px;border-radius:14px;max-width:80%;line-height:1.5;font-size:15px;white-space:pre-wrap}
+  .ben{align-self:flex-end;background:linear-gradient(180deg,#2a1f22,#211619);border:1px solid var(--line)}
+  .eskice{align-self:flex-start;background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-left:3px solid var(--gold)}
+  .eskice .ad{font-family:'Cormorant Garamond',serif;color:var(--gold);font-size:15px;margin-bottom:4px;letter-spacing:1px}
+  .foto{max-width:200px;border-radius:10px;margin-top:8px;display:block}
+  footer{border-top:1px solid var(--line);padding:12px;background:#0e0c0d}
+  .bar{max-width:800px;margin:0 auto;display:flex;gap:8px;align-items:flex-end}
+  textarea{flex:1;background:#0f0b0c;border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--text);font-family:'Jost';font-size:15px;resize:none;max-height:120px}
+  textarea:focus{outline:none;border-color:var(--gold)}
+  .ikon{width:46px;height:46px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--gold);font-size:20px;cursor:pointer;flex-shrink:0}
+  .ikon:hover{border-color:var(--gold)}
+  .gonder{background:linear-gradient(180deg,var(--gold),#a9842f);color:#1a1206;border:none}
+  .ikon.dinliyor{background:var(--gold);color:#1a1206;animation:yaniporsone 1s infinite}
+  @keyframes yaniporsone{50%{opacity:.5}}
+  #onizleme{max-width:800px;margin:0 auto 8px;display:none}
+  #onizleme img{max-height:70px;border-radius:8px;border:1px solid var(--gold)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">ESKİCE</div>
+  <div class="sub">ANTİKA YOLDAŞIN</div>
+</header>
+
+<div id="chat">
+  <div class="msg eskice"><div class="ad">Eskice</div>Merhaba. Ben Eskice, antika yoldaşın. Elinde bir parça mı var, yoksa bir şey mi merak ediyorsun? İstersen fotoğrafını gönder, birlikte bakalım.</div>
+</div>
+
+<footer>
+  <div id="onizleme"><img id="onizlemeImg"></div>
+  <div class="bar">
+    <button class="ikon" id="fotoBtn" title="Fotoğraf">📷</button>
+    <input type="file" id="fotoInput" accept="image/*" style="display:none">
+    <button class="ikon" id="mikBtn" title="Konuş">🎤</button>
+    <textarea id="giris" rows="1" placeholder="Yaz ya da konuş..."></textarea>
+    <button class="ikon gonder" id="gonderBtn" title="Gönder">➤</button>
+  </div>
+</footer>
+
+<script>
+const SERVER = 'https://eskice-server.onrender.com';
+const chat = document.getElementById('chat');
+const giris = document.getElementById('giris');
+let gecmis = [];
+let seciliFoto = null;
+
+function ekle(rol, metin, fotoUrl){
+  const d = document.createElement('div');
+  d.className = 'msg ' + (rol==='eskice'?'eskice':'ben');
+  let ic = '';
+  if(rol==='eskice') ic += '<div class="ad">Eskice</div>';
+  ic += metin.replace(/</g,'&lt;');
+  if(fotoUrl) ic += '<img class="foto" src="'+fotoUrl+'">';
+  d.innerHTML = ic;
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+  return d;
+}
+
+// Fotoğraf seç
+document.getElementById('fotoBtn').onclick = ()=>document.getElementById('fotoInput').click();
+document.getElementById('fotoInput').onchange = (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    seciliFoto = { data: r.result.split(',')[1], type: f.type, url: r.result };
+    document.getElementById('onizlemeImg').src = r.result;
+    document.getElementById('onizleme').style.display = 'block';
+  };
+  r.readAsDataURL(f);
+};
+
+// Gönder
+async function gonder(){
+  const metin = giris.value.trim();
+  if(!metin && !seciliFoto) return;
+  ekle('ben', metin || '(fotoğraf)', seciliFoto?seciliFoto.url:null);
+  giris.value='';
+  document.getElementById('onizleme').style.display='none';
+  const foto = seciliFoto; seciliFoto = null;
+
+  const bekle = ekle('eskice', 'düşünüyor...');
+  try{
+    const r = await fetch(SERVER+'/ask', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ question: metin, dosya: foto?{data:foto.data,type:foto.type}:null, gecmis })
+    });
+    const j = await r.json();
+    const cevap = j.answer || j.error || 'Bir şey ters gitti.';
+    bekle.innerHTML = '<div class="ad">Eskice</div>'+cevap.replace(/</g,'&lt;');
+    chat.scrollTop = chat.scrollHeight;
+    gecmis.push({rol:'ben',metin:metin||'(fotoğraf)'});
+    gecmis.push({rol:'eskice',metin:cevap});
+    seslendir(cevap);
+  }catch(err){
+    bekle.innerHTML = '<div class="ad">Eskice</div>Bağlanamadım, sunucu uyanıyor olabilir, birazdan tekrar dene.';
+  }
+}
+document.getElementById('gonderBtn').onclick = gonder;
+giris.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); gonder(); }});
+
+// Sesli okuma
+async function seslendir(metin){
+  try{
+    const r = await fetch(SERVER+'/ses', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ metin })
+    });
+    if(!r.ok) return;
+    const blob = await r.blob();
+    new Audio(URL.createObjectURL(blob)).play();
+  }catch(err){}
+}
+
+// Konuşma (mikrofon)
+const mikBtn = document.getElementById('mikBtn');
+const Tanima = window.SpeechRecognition || window.webkitSpeechRecognition;
+if(Tanima){
+  const taniyici = new Tanima();
+  taniyici.lang='tr-TR'; taniyici.continuous=false; taniyici.interimResults=false;
+  mikBtn.onclick = ()=>{ taniyici.start(); mikBtn.classList.add('dinliyor'); };
+  taniyici.onresult = (e)=>{ giris.value = e.results[0][0].transcript; };
+  taniyici.onend = ()=>{ mikBtn.classList.remove('dinliyor'); };
+  taniyici.onerror = ()=>{ mikBtn.classList.remove('dinliyor'); };
+} else {
+  mikBtn.style.display='none';
+}
+</script>
+</body>
+</html>
