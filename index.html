@@ -8,19 +8,9 @@
 <style>
   :root{--yazi:#463829;--bronz:#8a6435;--muted:#7d6b52;--line:rgba(138,100,53,.28)}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{
-    font-family:'EB Garamond',serif;color:var(--yazi);
-    min-height:100vh;
-    background:#e7d9bf url('https://hxlmi94.github.io/eskice-server/sohbet.png') center/cover fixed no-repeat;
-    display:flex;justify-content:center;
-  }
+  body{font-family:'EB Garamond',serif;color:var(--yazi);min-height:100vh;background:#e7d9bf url('https://hxlmi94.github.io/eskice-server/sohbet.png') center/cover fixed no-repeat;display:flex;justify-content:center;}
   body::before{content:"";position:fixed;inset:0;background:rgba(244,236,216,.5);z-index:0;}
-  .uygulama{
-    position:relative;z-index:1;width:100%;max-width:480px;height:100vh;
-    display:flex;flex-direction:column;background:rgba(247,240,224,.4);
-    border-left:1px solid var(--line);border-right:1px solid var(--line);
-    box-shadow:0 0 40px rgba(70,45,18,.15);backdrop-filter:blur(1px);
-  }
+  .uygulama{position:relative;z-index:1;width:100%;max-width:480px;height:100vh;display:flex;flex-direction:column;background:rgba(247,240,224,.4);border-left:1px solid var(--line);border-right:1px solid var(--line);box-shadow:0 0 40px rgba(70,45,18,.15);backdrop-filter:blur(1px);}
   header{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);background:rgba(244,236,216,.6)}
   .logo{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--bronz);letter-spacing:3px}
   .sub{font-size:12px;color:var(--muted);letter-spacing:2px;font-style:italic}
@@ -52,9 +42,7 @@
     <div class="logo">ESKİCE</div>
     <div class="sub">antika yoldaşın</div>
   </header>
-
   <div id="chat"></div>
-
   <footer>
     <div id="onizleme"><img id="onizlemeImg"></div>
     <div class="bar">
@@ -82,7 +70,6 @@ function ekle(rol, metin, fotoUrl){
   ic += metin.replace(/</g,'&lt;');
   if(fotoUrl) ic += '<img class="foto" src="'+fotoUrl+'">';
   d.innerHTML = ic;
-  // Eskice mesajına dinle düğmesi
   if(rol==='eskice' && metin && metin!=='düşünüyor...'){
     const btn = document.createElement('button');
     btn.className='dinle'; btn.innerHTML='🔊 dinle';
@@ -94,7 +81,6 @@ function ekle(rol, metin, fotoUrl){
   return d;
 }
 
-// ilk karşılama
 ekle('eskice','Merhaba. Ben Eskice, antika yoldaşın. Elinde bir parça mı var, yoksa bir şey mi merak ediyorsun? İstersen fotoğrafını gönder, birlikte bakalım.');
 
 document.getElementById('fotoBtn').onclick = ()=>document.getElementById('fotoInput').click();
@@ -126,7 +112,6 @@ async function gonder(){
     });
     const j = await r.json();
     const cevap = j.answer || j.error || 'Bir şey ters gitti.';
-    // bekle balonunu cevaba çevir + dinle düğmesi ekle
     bekle.innerHTML = '<div class="ad">Eskice</div>'+cevap.replace(/</g,'&lt;');
     const btn = document.createElement('button');
     btn.className='dinle'; btn.innerHTML='🔊 dinle';
@@ -149,12 +134,19 @@ async function seslendir(metin, btn){
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ metin })
     });
-    if(!r.ok){ if(btn) btn.innerHTML='🔇 ses gelmedi'; return; }
+    if(!r.ok){
+      const hata = await r.text();
+      if(btn) btn.innerHTML='🔇 hata';
+      alert('Ses gelmedi. Sebep:\n\n' + hata);
+      return;
+    }
     const blob = await r.blob();
-    const ses = new Audio(URL.createObjectURL(blob));
-    ses.play();
+    new Audio(URL.createObjectURL(blob)).play();
     if(btn) btn.innerHTML='🔊 dinle';
-  }catch(err){ if(btn) btn.innerHTML='🔇 ses gelmedi'; }
+  }catch(err){
+    if(btn) btn.innerHTML='🔇 hata';
+    alert('Bağlantı hatası: ' + err.message);
+  }
 }
 
 const mikBtn = document.getElementById('mikBtn');
