@@ -1,194 +1,112 @@
-import express from 'express';
-import Anthropic from '@anthropic-ai/sdk';
-import { createClient } from '@supabase/supabase-js';
-const app = express();
-app.use(express.json({ limit: '25mb' }));
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
-  next();
-});
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY);
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Muhasebe — Eskice</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{--bronz:#8a6435;--bronz2:#6e5323;--yazi:#5f4623;--muted:#8a7a5f;--krem:#fbf5e9;--line:#d8c39c;--yesil:#5b7048;--kirmizi:#9b4a38}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'EB Garamond',serif;color:var(--yazi);min-height:100vh;display:flex;justify-content:center;background:#e7d4ab url('https://hxlmi94.github.io/eskice-server/sohbet.png') center/cover fixed no-repeat}
+  body::before{content:"";position:fixed;inset:0;background:rgba(242,233,210,.62);z-index:0}
+  .ekran{position:relative;z-index:1;width:100%;max-width:480px;min-height:100vh;padding:20px 22px 40px;background:rgba(247,240,224,.35);border-left:1px solid rgba(138,100,53,.18);border-right:1px solid rgba(138,100,53,.18)}
+  .ust{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .geri{text-decoration:none;color:var(--bronz);font-size:28px;line-height:1}
+  .baslik{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--yazi);letter-spacing:1px}
+  .ayrapor{background:linear-gradient(160deg,#9a7238,#6e5323);border-radius:16px;padding:18px 20px;margin-bottom:16px;color:var(--krem)}
+  .ayrapor .aybaslik{font-family:'Cormorant Garamond',serif;font-size:19px;letter-spacing:.5px;margin-bottom:12px;opacity:.95}
+  .ayrapor .net{font-family:'Cormorant Garamond',serif;font-size:32px;margin:2px 0 12px}
+  .ayrapor .netetiket{font-size:12px;opacity:.8;letter-spacing:1px}
+  .ayrapor .satir{display:flex;justify-content:space-between;font-size:14px;padding:4px 0;border-top:1px solid rgba(255,255,255,.15)}
+  .bolum{font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--bronz2);margin:18px 0 10px}
+  .ikili{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:6px}
+  .kutu{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:14px;padding:12px 8px;text-align:center}
+  .kutu .rakam{font-family:'Cormorant Garamond',serif;font-size:17px}
+  .kutu.gelir .rakam{color:var(--yesil)}
+  .kutu.gider .rakam{color:var(--kirmizi)}
+  .kutu .etiket{font-size:11px;color:var(--muted);margin-top:2px}
+  .liste{display:flex;flex-direction:column;gap:9px}
+  .satirk{background:rgba(251,245,233,.82);border:1px solid var(--line);border-radius:12px;padding:11px 14px;display:flex;justify-content:space-between;align-items:center}
+  .satirk .ad{font-size:15px;font-weight:500}
+  .satirk .tarih{font-size:12px;color:var(--muted);font-style:italic;margin-top:2px}
+  .rozet{font-size:11px;padding:2px 8px;border-radius:20px;margin-left:6px}
+  .rozet.alis{background:#efe6d4;color:var(--bronz2)}
+  .rozet.satis{background:#e6efe0;color:var(--yesil)}
+  .rozet.gider{background:#f2e0da;color:var(--kirmizi)}
+  .fiyat{font-family:'Cormorant Garamond',serif;font-size:16px;white-space:nowrap}
+  .bos{text-align:center;color:var(--muted);font-style:italic;padding:34px 16px;border:1px dashed var(--line);border-radius:14px}
+  .yukleniyor{text-align:center;color:var(--muted);padding:40px;font-style:italic}
+</style>
+</head>
+<body>
+  <div class="ekran">
+    <div class="ust">
+      <a class="geri" href="menu.html">‹</a>
+      <div class="baslik">Muhasebe</div>
+    </div>
+    <div class="ayrapor" id="ayrapor" style="display:none">
+      <div class="aybaslik" id="aybaslik">Bu Ay</div>
+      <div class="netetiket">BU AY NET KÂR</div>
+      <div class="net" id="ayNet">—</div>
+      <div class="satir"><span>Satış geliri</span><span id="aySatis">—</span></div>
+      <div class="satir"><span>Alımlar</span><span id="ayAlim">—</span></div>
+      <div class="satir"><span>Giderler</span><span id="ayGider">—</span></div>
+    </div>
+    <div class="bolum">Genel Toplam</div>
+    <div class="ikili">
+      <div class="kutu gelir"><div class="rakam" id="gelir">—</div><div class="etiket">Satış</div></div>
+      <div class="kutu gider"><div class="rakam" id="gider">—</div><div class="etiket">Gider+Alım</div></div>
+      <div class="kutu"><div class="rakam" id="net">—</div><div class="etiket">Net Kâr</div></div>
+    </div>
+    <div class="bolum">Hareketler</div>
+    <div class="liste" id="liste"><div class="yukleniyor">Yükleniyor...</div></div>
+  </div>
 
-// Fotoğrafı depoya yükler, herkese açık adresini döndürür
-const FOTO_URL_BASE = process.env.SUPABASE_URL + '/storage/v1/object/public/fotograflar/';
-async function fotoYukle(base64, tip) {
-  try {
-    const uzanti = (tip && tip.includes('png')) ? 'png' : 'jpg';
-    const ad = 'eser_' + Date.now() + '.' + uzanti;
-    const buf = Buffer.from(base64, 'base64');
-    const { error } = await supabase.storage.from('fotograflar').upload(ad, buf, { contentType: tip || 'image/jpeg', upsert: false });
-    if (error) return null;
-    return FOTO_URL_BASE + ad;
-  } catch (e) { return null; }
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const supabase = createClient(
+  'https://SENIN-PROJEN.supabase.co',
+  'SENIN-PUBLISHABLE-ANAHTARIN'
+);
+
+const para = (s)=>{ const n=parseFloat(String(s||'').replace(/[^\d.,-]/g,'').replace(',','.')); return isNaN(n)?0:n; };
+const fmt = (n)=> n.toLocaleString('tr-TR') + ' TL';
+const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+function buAyMi(t){ if(!t) return false; const d=new Date(t); if(isNaN(d)) return false; const n=new Date(); return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear(); }
+
+async function yukle(){
+  const liste = document.getElementById('liste');
+  try{
+    const [as, gd] = await Promise.all([
+      supabase.from('alim_satim').select('*').order('created_at',{ascending:false}),
+      supabase.from('giderler').select('*').order('created_at',{ascending:false})
+    ]);
+    const islemler = as.data || [];
+    const giderler = gd.data || [];
+    let alim=0,satim=0,gider=0,aAlim=0,aSatim=0,aGider=0;
+    islemler.forEach(k=>{ const t=para(k.fiyat),bu=buAyMi(k.created_at); if((k.tur||'').includes('sat')){satim+=t; if(bu)aSatim+=t;} else {alim+=t; if(bu)aAlim+=t;} });
+    giderler.forEach(k=>{ const t=para(k.tutar),bu=buAyMi(k.created_at); gider+=t; if(bu)aGider+=t; });
+    document.getElementById('gelir').textContent=fmt(satim);
+    document.getElementById('gider').textContent=fmt(alim+gider);
+    document.getElementById('net').textContent=fmt(satim-alim-gider);
+    const now=new Date();
+    document.getElementById('aybaslik').textContent=AYLAR[now.getMonth()]+' '+now.getFullYear();
+    document.getElementById('ayNet').textContent=fmt(aSatim-aAlim-aGider);
+    document.getElementById('aySatis').textContent=fmt(aSatim);
+    document.getElementById('ayAlim').textContent=fmt(aAlim);
+    document.getElementById('ayGider').textContent=fmt(aGider);
+    document.getElementById('ayrapor').style.display='block';
+    const hepsi=[];
+    islemler.forEach(k=> hepsi.push({tip:(k.tur||'').includes('sat')?'satis':'alis',ad:k.ad,tutar:k.fiyat,tarih:k.tarih,t:k.created_at}));
+    giderler.forEach(k=> hepsi.push({tip:'gider',ad:k.aciklama,tutar:k.tutar,tarih:k.tarih,t:k.created_at}));
+    hepsi.sort((a,b)=> new Date(b.t||0)-new Date(a.t||0));
+    if(!hepsi.length){ liste.innerHTML='<div class="bos">Henüz hareket yok. Eskice ile konuşurken alım, satım ya da masraf söyle.</div>'; return; }
+    const ad={alis:'alış',satis:'satış',gider:'gider'};
+    liste.innerHTML=hepsi.map(k=>'<div class="satirk"><div><div class="ad">'+(k.ad||'-')+'<span class="rozet '+k.tip+'">'+ad[k.tip]+'</span></div><div class="tarih">'+(k.tarih||'')+'</div></div><div class="fiyat">'+(k.tutar||'')+'</div></div>').join('');
+  }catch(err){ liste.innerHTML='<div class="bos">Okunamadı: '+err.message+'</div>'; }
 }
-
-const SYSTEM_PROMPT = `Sen Eskice'sin. Bir antikacının yol arkadaşısın. Ona adıyla seslenirsin.
-
-MİSYONUN:
-Amacın antika satmak ya da her objeyi değerli göstermek değil. Amacın, kullanıcının daha bilinçli bir antikacı olmasına yardım etmek.
-
-SEN KİMSİN:
-Uzun yıllardır antika dünyasının içindesin. Bir objeye baktığında sadece fiyatını değil hikayesini de görürsün.
-Kişiliğin: sakin, mütevazı, meraklı, dürüst, sabırlı, esprili. Bilmediğin konuda tahmin yürütmezsin. Kullanıcıyı asla küçük düşürmezsin.
-
-KULLANICIYLA İLİŞKİN:
-Kendini yol arkadaşı olarak görürsün. Sen cevap vermezsin, karar vermesine yardım edersin. "Ben olsam alırım çünkü" ya da "ben olsam buna para bağlamam" dersin. Son karar onun.
-
-NASIL KONUŞURSUN:
-İnsan gibi, sohbet eder gibi. ÇOK KISA KONUŞ, en fazla üç dört cümle. Madde madde sıralama, uzun liste yapma. Önce en önemli şeyi söyle, sonra sus.
-Hiçbir yazı işareti koyma: yıldız, tire YOK. Sesli okunuyorsun.
-Düzgün tam Türkçe: ı, ş, ğ, ç, ö, ü. Para söylerken rakam ve yazıyla: "altı yüz lira, yani 600 TL".
-
-KULLANICIYI TANI:
-Sana kullanıcı hakkında hafıza bilgileri verilir. Bunları hatırla ve sohbete doğal kat. Onu tanıyan bir yoldaş gibi davran.
-
-WEB ARAŞTIRMASI:
-Güncel piyasa değeri, benzer satışlar ya da bir dönem hakkında güncel bilgi sorulursa web araması yap, gerçek bilgiye dayan, kısaca özetle. Sahibinden gibi kapalı siteler aranamaz, açık kaynaklardan genel fikir verirsin. Bulamazsan dürüstçe söyle.
-
-ESER DEĞERLENDİRME:
-Eser anlatılınca ya da fotoğrafı gelince kısaca: ne olduğu, dönemi, malzeme ve durumu, tahmini değer aralığı. Kesin fiyat verme, aralık ver.
-
-SAHTECİLİK:
-Şüpheli işaretler: fazla yeni patina, tutmayan damga, uyumsuz malzeme, aşırı ucuz fiyat. Kesin sahte deme, emin değilsen ekspere yönlendir. Kaçak kazı ve tarihi eser kaçakçılığı yasa dışıdır, ima edilirse nazikçe uyar.
-
-YENİ YETENEKLERİN:
-İlan yazma, karşılaştırma, öğretme yapabilirsin. Kısa tut.
-
-HAFIZA KAYDETME:
-Kullanıcı hakkında kalıcı önemli bir şey öğrenirsen EN SONUNA ekle:
-[[HAFIZA|bilgi]]
-Sadece yeni ve önemli bir bilgi öğrenince.
-
-ESER KAYDETME:
-Kaydedilecek eser varsa EN SONUNA ekle:
-[[ESER|ad|donem|tahmini_deger|durum]]
-
-SATIŞ KAYDETME:
-[[ISLEM|tur|ad|fiyat|tarih]] (tur alis ya satis)
-
-MÜŞTERİ KAYDETME:
-[[MUSTERI|isim|aradigi|not]]
-
-GİDER KAYDETME:
-[[GIDER|aciklama|tutar|tarih]]
-
-Bu teknik satırlar hariç düzgün Türkçe kullan. Kısa konuş.`;
-
-async function buildContext() {
-  const parts = [`Bugünün tarihi ve saati: ${new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}`];
-  const tablolar = ['hafiza', 'eserler', 'kullanici_profili', 'alim_satim', 'musteriler', 'giderler'];
-  for (const t of tablolar) {
-    try {
-      const { data, error } = await supabase.from(t).select('*').limit(300);
-      if (error) throw error;
-      if (data && data.length) parts.push(`## ${t}\n${JSON.stringify(data)}`);
-    } catch (err) {
-      parts.push(`## ${t}\n(okunamadı: ${err.message})`);
-    }
-  }
-  return parts.join('\n\n');
-}
-
-app.post('/ask', async (req, res) => {
-  try {
-    const { question, dosya, gecmis } = req.body;
-    if (!question && !dosya) return res.status(400).json({ error: 'soru veya dosya gerekli' });
-
-    // Fotoğrafı depoya yükle (varsa), adresini sakla
-    let fotoUrl = null;
-    let icerik;
-    if (dosya && dosya.data) {
-      if (dosya.type && dosya.type.startsWith('image/')) {
-        fotoUrl = await fotoYukle(dosya.data, dosya.type);
-      }
-      const blok = dosya.type === 'application/pdf'
-        ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: dosya.data } }
-        : { type: 'image', source: { type: 'base64', media_type: dosya.type, data: dosya.data } };
-      icerik = [blok, { type: 'text', text: question || 'Bu eseri kısaca değerlendir: ne olduğu, dönemi, durumu, tahmini değer aralığı.' }];
-    } else {
-      icerik = question;
-    }
-
-    const mesajlar = [];
-    if (Array.isArray(gecmis)) {
-      gecmis.slice(-14).forEach(m => {
-        if (m && m.rol && m.metin) mesajlar.push({ role: m.rol === 'eskice' ? 'assistant' : 'user', content: m.metin });
-      });
-    }
-    mesajlar.push({ role: 'user', content: icerik });
-
-    const context = await buildContext();
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 700,
-      system: `${SYSTEM_PROMPT}\n\nKullanıcının verisi (sadece gerektiğinde kullan):\n${context}`,
-      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }],
-      messages: mesajlar,
-    });
-
-    let cevap = message.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
-    if (!cevap) cevap = 'Bir şeyler ters gitti, tekrar dener misin?';
-
-    const h = cevap.match(/\[\[HAFIZA\|([^\]]*)\]\]/);
-    if (h) {
-      cevap = cevap.replace(h[0], '').trim();
-      try { await supabase.from('hafiza').insert({ icerik:(h[1]||'').trim() }); } catch (err) {}
-    }
-    const e = cevap.match(/\[\[ESER\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
-    if (e) {
-      cevap = cevap.replace(e[0], '').trim();
-      try { await supabase.from('eserler').insert({ ad:(e[1]||'').trim(), donem:(e[2]||'').trim(), tahmini_deger:(e[3]||'').trim(), durum:(e[4]||'stokta').trim(), foto_url: fotoUrl }); } catch (err) {}
-    }
-    const i = cevap.match(/\[\[ISLEM\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
-    if (i) {
-      cevap = cevap.replace(i[0], '').trim();
-      try { await supabase.from('alim_satim').insert({ tur:(i[1]||'').trim(), ad:(i[2]||'').trim(), fiyat:(i[3]||'').trim(), tarih:(i[4]||'').trim() }); } catch (err) {}
-    }
-    const m = cevap.match(/\[\[MUSTERI\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
-    if (m) {
-      cevap = cevap.replace(m[0], '').trim();
-      try { await supabase.from('musteriler').insert({ isim:(m[1]||'').trim(), aradigi:(m[2]||'').trim(), not_:(m[3]||'').trim() }); } catch (err) {}
-    }
-    const g = cevap.match(/\[\[GIDER\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
-    if (g) {
-      cevap = cevap.replace(g[0], '').trim();
-      try { await supabase.from('giderler').insert({ aciklama:(g[1]||'').trim(), tutar:(g[2]||'').trim(), tarih:(g[3]||'').trim() }); } catch (err) {}
-    }
-
-    res.json({ answer: cevap, foto: fotoUrl });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/ses', async (req, res) => {
-  try {
-    const { metin } = req.body;
-    if (!metin) return res.status(400).json({ error: 'metin gerekli' });
-    const voiceId = 'EXAVITQu4vr4xnSDxMaL';
-    const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-      method: 'POST',
-      headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text: metin,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: { stability: 0.4, similarity_boost: 0.85, style: 0.25, use_speaker_boost: true },
-      }),
-    });
-    if (!r.ok) { const t = await r.text(); return res.status(500).json({ error: t }); }
-    const buf = Buffer.from(await r.arrayBuffer());
-    res.set('Content-Type', 'audio/mpeg');
-    res.send(buf);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get('/', (req, res) => { res.send('Eskice sunucusu çalışıyor.'); });
-const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`Eskice ${port} portunda çalışıyor`));
+yukle();
+</script>
+</body>
+</html>
