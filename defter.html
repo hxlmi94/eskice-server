@@ -14,20 +14,22 @@
   .ust{display:flex;align-items:center;gap:12px;margin-bottom:18px}
   .geri{text-decoration:none;color:var(--bronz);font-size:28px;line-height:1}
   .baslik{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--yazi);letter-spacing:1px}
-  .netkutu{background:linear-gradient(160deg,#9a7238,#6e5323);border-radius:16px;padding:18px 20px;text-align:center;margin-bottom:14px;color:var(--krem)}
-  .netkutu .etiket{font-size:13px;opacity:.85;letter-spacing:1px}
-  .netkutu .rakam{font-family:'Cormorant Garamond',serif;font-size:34px;margin-top:2px}
-  .ikili{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
-  .kutu{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center}
-  .kutu .rakam{font-family:'Cormorant Garamond',serif;font-size:20px}
+  .ayrapor{background:linear-gradient(160deg,#9a7238,#6e5323);border-radius:16px;padding:18px 20px;margin-bottom:16px;color:var(--krem)}
+  .ayrapor .aybaslik{font-family:'Cormorant Garamond',serif;font-size:19px;letter-spacing:.5px;margin-bottom:12px;opacity:.95}
+  .ayrapor .net{font-family:'Cormorant Garamond',serif;font-size:32px;margin:2px 0 12px}
+  .ayrapor .netetiket{font-size:12px;opacity:.8;letter-spacing:1px}
+  .ayrapor .satir{display:flex;justify-content:space-between;font-size:14px;padding:4px 0;border-top:1px solid rgba(255,255,255,.15)}
+  .bolum{font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--bronz2);margin:18px 0 10px}
+  .ikili{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:6px}
+  .kutu{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:14px;padding:12px 8px;text-align:center}
+  .kutu .rakam{font-family:'Cormorant Garamond',serif;font-size:17px}
   .kutu.gelir .rakam{color:var(--yesil)}
   .kutu.gider .rakam{color:var(--kirmizi)}
-  .kutu .etiket{font-size:12px;color:var(--muted);margin-top:3px}
-  .bolum{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--bronz2);margin:8px 0 10px}
+  .kutu .etiket{font-size:11px;color:var(--muted);margin-top:2px}
   .liste{display:flex;flex-direction:column;gap:9px}
-  .satir{background:rgba(251,245,233,.82);border:1px solid var(--line);border-radius:12px;padding:11px 14px;display:flex;justify-content:space-between;align-items:center}
-  .satir .ad{font-size:15px;font-weight:500}
-  .satir .tarih{font-size:12px;color:var(--muted);font-style:italic;margin-top:2px}
+  .satirk{background:rgba(251,245,233,.82);border:1px solid var(--line);border-radius:12px;padding:11px 14px;display:flex;justify-content:space-between;align-items:center}
+  .satirk .ad{font-size:15px;font-weight:500}
+  .satirk .tarih{font-size:12px;color:var(--muted);font-style:italic;margin-top:2px}
   .rozet{font-size:11px;padding:2px 8px;border-radius:20px;margin-left:6px}
   .rozet.alis{background:#efe6d4;color:var(--bronz2)}
   .rozet.satis{background:#e6efe0;color:var(--yesil)}
@@ -44,13 +46,20 @@
       <div class="baslik">Muhasebe</div>
     </div>
 
-    <div class="netkutu">
-      <div class="etiket">NET KÂR</div>
-      <div class="rakam" id="net">—</div>
+    <div class="ayrapor" id="ayrapor" style="display:none">
+      <div class="aybaslik" id="aybaslik">Bu Ay</div>
+      <div class="netetiket">BU AY NET KÂR</div>
+      <div class="net" id="ayNet">—</div>
+      <div class="satir"><span>Satış geliri</span><span id="aySatis">—</span></div>
+      <div class="satir"><span>Alımlar</span><span id="ayAlim">—</span></div>
+      <div class="satir"><span>Giderler</span><span id="ayGider">—</span></div>
     </div>
+
+    <div class="bolum">Genel Toplam</div>
     <div class="ikili">
-      <div class="kutu gelir"><div class="rakam" id="gelir">—</div><div class="etiket">Gelir (satış)</div></div>
-      <div class="kutu gider"><div class="rakam" id="gider">—</div><div class="etiket">Gider</div></div>
+      <div class="kutu gelir"><div class="rakam" id="gelir">—</div><div class="etiket">Satış</div></div>
+      <div class="kutu gider"><div class="rakam" id="gider">—</div><div class="etiket">Gider+Alım</div></div>
+      <div class="kutu"><div class="rakam" id="net">—</div><div class="etiket">Net Kâr</div></div>
     </div>
 
     <div class="bolum">Hareketler</div>
@@ -66,6 +75,15 @@ const supabase = createClient(
 
 const para = (s)=>{ const n=parseFloat(String(s||'').replace(/[^\d.,-]/g,'').replace(',','.')); return isNaN(n)?0:n; };
 const fmt = (n)=> n.toLocaleString('tr-TR') + ' TL';
+const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+
+function buAyMi(tarihStr){
+  if(!tarihStr) return false;
+  const d = new Date(tarihStr);
+  if(isNaN(d)) return false;
+  const now = new Date();
+  return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+}
 
 async function yukle(){
   const liste = document.getElementById('liste');
@@ -78,28 +96,39 @@ async function yukle(){
     const giderler = gd.data || [];
 
     let alim=0, satim=0, gider=0;
-    islemler.forEach(k=>{ if((k.tur||'').includes('sat')) satim+=para(k.fiyat); else alim+=para(k.fiyat); });
-    giderler.forEach(k=> gider+=para(k.tutar));
-    const net = satim - alim - gider;
+    let aAlim=0, aSatim=0, aGider=0;
+    islemler.forEach(k=>{
+      const t=para(k.fiyat), bu=buAyMi(k.created_at);
+      if((k.tur||'').includes('sat')){ satim+=t; if(bu) aSatim+=t; }
+      else { alim+=t; if(bu) aAlim+=t; }
+    });
+    giderler.forEach(k=>{ const t=para(k.tutar), bu=buAyMi(k.created_at); gider+=t; if(bu) aGider+=t; });
 
+    // genel
     document.getElementById('gelir').textContent = fmt(satim);
     document.getElementById('gider').textContent = fmt(alim+gider);
-    document.getElementById('net').textContent = fmt(net);
+    document.getElementById('net').textContent = fmt(satim-alim-gider);
 
-    // hepsini tek listede, tarihe göre karışık (en yeni üstte gibi)
-    const hepsi = [];
-    islemler.forEach(k=> hepsi.push({ tip:(k.tur||'').includes('sat')?'satis':'alis', ad:k.ad, tutar:k.fiyat, tarih:k.tarih, t:k.created_at }));
-    giderler.forEach(k=> hepsi.push({ tip:'gider', ad:k.aciklama, tutar:k.tutar, tarih:k.tarih, t:k.created_at }));
-    hepsi.sort((a,b)=> new Date(b.t||0) - new Date(a.t||0));
+    // bu ay
+    const now=new Date();
+    document.getElementById('aybaslik').textContent = AYLAR[now.getMonth()]+' '+now.getFullYear();
+    document.getElementById('ayNet').textContent = fmt(aSatim-aAlim-aGider);
+    document.getElementById('aySatis').textContent = fmt(aSatim);
+    document.getElementById('ayAlim').textContent = fmt(aAlim);
+    document.getElementById('ayGider').textContent = fmt(aGider);
+    document.getElementById('ayrapor').style.display = 'block';
 
-    if(!hepsi.length){ liste.innerHTML='<div class="bos">Henüz hareket yok. Eskice ile konuşurken alım, satım ya da masraf söyle, buraya düşsün.</div>'; return; }
+    // hareketler
+    const hepsi=[];
+    islemler.forEach(k=> hepsi.push({tip:(k.tur||'').includes('sat')?'satis':'alis',ad:k.ad,tutar:k.fiyat,tarih:k.tarih,t:k.created_at}));
+    giderler.forEach(k=> hepsi.push({tip:'gider',ad:k.aciklama,tutar:k.tutar,tarih:k.tarih,t:k.created_at}));
+    hepsi.sort((a,b)=> new Date(b.t||0)-new Date(a.t||0));
 
-    const ad = {alis:'alış', satis:'satış', gider:'gider'};
+    if(!hepsi.length){ liste.innerHTML='<div class="bos">Henüz hareket yok. Eskice ile konuşurken alım, satım ya da masraf söyle.</div>'; return; }
+    const ad={alis:'alış',satis:'satış',gider:'gider'};
     liste.innerHTML = hepsi.map(k=>
-      '<div class="satir"><div><div class="ad">'+(k.ad||'-')+
-      '<span class="rozet '+k.tip+'">'+ad[k.tip]+'</span></div>'+
-      '<div class="tarih">'+(k.tarih||'')+'</div></div>'+
-      '<div class="fiyat">'+(k.tutar||'')+'</div></div>'
+      '<div class="satirk"><div><div class="ad">'+(k.ad||'-')+'<span class="rozet '+k.tip+'">'+ad[k.tip]+'</span></div>'+
+      '<div class="tarih">'+(k.tarih||'')+'</div></div><div class="fiyat">'+(k.tutar||'')+'</div></div>'
     ).join('');
   }catch(err){
     liste.innerHTML='<div class="bos">Okunamadı: '+err.message+'</div>';
