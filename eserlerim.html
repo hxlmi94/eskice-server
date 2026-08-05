@@ -17,8 +17,8 @@
   .sayi{font-size:14px;color:var(--muted);font-style:italic;margin-bottom:18px;margin-left:40px}
   .liste{display:flex;flex-direction:column;gap:12px}
   .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:14px;overflow:hidden;border-left:3px solid var(--bronz);display:flex;gap:12px}
-  .kartfoto{width:92px;min-height:92px;flex-shrink:0;object-fit:cover;background:#e7dcc4}
-  .kartfoto.yok{display:flex;align-items:center;justify-content:center;color:#b9a884;font-size:28px}
+  .kartfoto{width:92px;object-fit:cover;background:#e7dcc4;align-self:stretch}
+  .kartfoto.yok{display:flex;align-items:center;justify-content:center;color:#b9a884;font-size:28px;min-height:92px}
   .kartic{padding:12px 14px;flex:1}
   .kart .ad{font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--yazi)}
   .kart .bilgi{font-size:13px;color:var(--muted);margin-top:3px}
@@ -28,6 +28,9 @@
   .durum.stokta{background:#e6efe0;color:var(--yesil)}
   .durum.satildi{background:#ece3d6;color:var(--muted)}
   .durum.rezerve{background:#f3ead6;color:var(--bronz2)}
+  .satbtn{margin-top:10px;background:linear-gradient(180deg,#a97c46,#8a6435);color:var(--krem);border:none;border-radius:20px;padding:7px 18px;font-family:'EB Garamond',serif;font-size:14px;cursor:pointer}
+  .satbtn:hover{filter:brightness(1.07)}
+  .satili{margin-top:10px;font-size:13px;color:var(--muted);font-style:italic}
   .bos{text-align:center;color:var(--muted);font-style:italic;padding:40px 16px;border:1px dashed var(--line);border-radius:14px}
   .yukleniyor{text-align:center;color:var(--muted);padding:40px;font-style:italic}
 </style>
@@ -49,31 +52,55 @@ const supabase = createClient(
   'SENIN-PUBLISHABLE-ANAHTARIN'
 );
 
+let eserler = [];
+
 async function yukle(){
   const liste = document.getElementById('liste');
   try{
     const { data, error } = await supabase.from('eserler').select('*').order('created_at',{ascending:false});
     if(error) throw error;
-    if(!data || !data.length){
-      liste.innerHTML='<div class="bos">Henüz eser yok. Eskice ile konuşurken bir esere baktığında ya da kaydetmesini istediğinde buraya düşer.</div>';
+    eserler = data || [];
+    if(!eserler.length){
+      liste.innerHTML='<div class="bos">Henüz eser yok. Eskice ile konuşurken bir eseri kaydettiğinde buraya düşer.</div>';
       document.getElementById('sayi').textContent=''; return;
     }
-    document.getElementById('sayi').textContent = data.length + ' eser';
-    liste.innerHTML = data.map(e=>{
+    document.getElementById('sayi').textContent = eserler.length + ' eser';
+    liste.innerHTML = eserler.map(e=>{
       const bilgi = [e.donem, e.malzeme].filter(Boolean).join(' · ');
       const durum = (e.durum||'stokta').toLowerCase();
-      const foto = e.foto_url
-        ? '<img class="kartfoto" src="'+e.foto_url+'" alt="">'
-        : '<div class="kartfoto yok">🏺</div>';
+      const foto = e.foto_url ? '<img class="kartfoto" src="'+e.foto_url+'" alt="">' : '<div class="kartfoto yok">🏺</div>';
+      const satildi = durum==='satildi';
+      const btn = satildi
+        ? '<div class="satili">✓ satıldı'+(e.satis_fiyati?' — '+e.satis_fiyati:'')+'</div>'
+        : '<button class="satbtn" onclick="window.sat(\''+e.id+'\')">Sat</button>';
       return '<div class="kart">'+foto+'<div class="kartic"><div class="ad">'+(e.ad||'-')+'</div>'+
         (bilgi?'<div class="bilgi">'+bilgi+'</div>':'')+
         '<div class="alt"><span class="deger">'+(e.tahmini_deger||'değer belirsiz')+'</span>'+
-        '<span class="durum '+durum+'">'+durum+'</span></div></div></div>';
+        '<span class="durum '+durum+'">'+durum+'</span></div>'+btn+'</div></div>';
     }).join('');
   }catch(err){
     liste.innerHTML='<div class="bos">Okunamadı: '+err.message+'</div>';
   }
 }
+
+window.sat = async (id)=>{
+  const eser = eserler.find(e=> String(e.id)===String(id));
+  if(!eser) return;
+  const fiyat = prompt('"'+eser.ad+'" kaça satıldı? (sadece rakam yaz)');
+  if(fiyat===null) return; // iptal
+  const temiz = fiyat.trim();
+  try{
+    // eseri satıldı yap
+    await supabase.from('eserler').update({ durum:'satildi', satis_fiyati: temiz }).eq('id', id);
+    // deftere satış ekle
+    const bugun = new Date().toLocaleDateString('tr-TR');
+    await supabase.from('alim_satim').insert({ tur:'satis', ad: eser.ad, fiyat: temiz+' TL', tarih: bugun });
+    yukle();
+  }catch(err){
+    alert('Olmadı: '+err.message);
+  }
+};
+
 yukle();
 </script>
 </body>
