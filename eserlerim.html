@@ -15,13 +15,16 @@
   .geri{text-decoration:none;color:var(--bronz);font-size:28px;line-height:1}
   .baslik{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--yazi);letter-spacing:1px}
   .sayi{font-size:14px;color:var(--muted);font-style:italic;margin-bottom:18px;margin-left:40px}
-  .liste{display:flex;flex-direction:column;gap:11px}
-  .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:14px;padding:14px 16px;border-left:3px solid var(--bronz)}
+  .liste{display:flex;flex-direction:column;gap:12px}
+  .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:14px;overflow:hidden;border-left:3px solid var(--bronz);display:flex;gap:12px}
+  .kartfoto{width:92px;min-height:92px;flex-shrink:0;object-fit:cover;background:#e7dcc4}
+  .kartfoto.yok{display:flex;align-items:center;justify-content:center;color:#b9a884;font-size:28px}
+  .kartic{padding:12px 14px;flex:1}
   .kart .ad{font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--yazi)}
-  .kart .bilgi{font-size:14px;color:var(--muted);margin-top:3px}
+  .kart .bilgi{font-size:13px;color:var(--muted);margin-top:3px}
   .kart .alt{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
   .deger{font-size:15px;color:var(--bronz2);font-weight:500}
-  .durum{font-size:12px;padding:2px 10px;border-radius:20px}
+  .durum{font-size:11px;padding:2px 10px;border-radius:20px}
   .durum.stokta{background:#e6efe0;color:var(--yesil)}
   .durum.satildi{background:#ece3d6;color:var(--muted)}
   .durum.rezerve{background:#f3ead6;color:var(--bronz2)}
@@ -59,11 +62,13 @@ async function yukle(){
     liste.innerHTML = data.map(e=>{
       const bilgi = [e.donem, e.malzeme].filter(Boolean).join(' · ');
       const durum = (e.durum||'stokta').toLowerCase();
-      return '<div class="kart"><div class="ad">'+(e.ad||'-')+'</div>'+
+      const foto = e.foto_url
+        ? '<img class="kartfoto" src="'+e.foto_url+'" alt="">'
+        : '<div class="kartfoto yok">🏺</div>';
+      return '<div class="kart">'+foto+'<div class="kartic"><div class="ad">'+(e.ad||'-')+'</div>'+
         (bilgi?'<div class="bilgi">'+bilgi+'</div>':'')+
-        (e.notlar?'<div class="bilgi">'+e.notlar+'</div>':'')+
         '<div class="alt"><span class="deger">'+(e.tahmini_deger||'değer belirsiz')+'</span>'+
-        '<span class="durum '+durum+'">'+durum+'</span></div></div>';
+        '<span class="durum '+durum+'">'+durum+'</span></div></div></div>';
     }).join('');
   }catch(err){
     liste.innerHTML='<div class="bos">Okunamadı: '+err.message+'</div>';
