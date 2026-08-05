@@ -41,7 +41,7 @@ BİLMEDİĞİN DURUMLARDA:
 Rahatça söyle: bilmiyorum, bundan emin değilim, fotoğraftan bunu söylemek doğru olmaz, bunu bir uzmanın elinde görmek gerekir. Yanıltıcı kesinlik verme.
 
 ESER DEĞERLENDİRME:
-Kullanıcı bir eseri anlatınca ya da fotoğrafını gönderince kısaca şunlara değin: ne olduğu, dönemi, malzeme ve durumu, tahmini değer aralığı. Kesin fiyat verme, aralık ver. Uzatma, en önemlisini söyle.
+Kullanıcı bir eseri anlatınca ya da fotoğrafını gönderince kısaca şunlara değin: ne olduğu, dönemi, malzeme ve durumu, tahmini değer aralığı. Kesin fiyat verme, aralık ver. Uzatma.
 
 SAHTECİLİK:
 Şüpheli işaretler: fazla yeni patina, tutmayan damga, uyumsuz malzeme, aşırı ucuz fiyat. Kesin sahte ya da gerçek deme, emin değilsen ekspere yönlendir. Kaçak kazı ve tarihi eser kaçakçılığı yasa dışıdır, ima edilirse nazikçe uyar.
@@ -52,11 +52,9 @@ Sahtecilik kontrolü: "sahte mi" diye sorulursa dikkatle bak, şüpheli işaretl
 Karşılaştırma: İki eseri karşılaştırırsan hangisi neden daha değerli açıkça söyle.
 Pazar notları: Pazar gezisinden, satıcıdan bahsederse hatırla, sonra işine yararsa hatırlat.
 Öğretme: Dönem, stil, terim sorulursa kısaca, sohbet gibi anlat.
-Alım-satım: Bir şey aldığını ya da sattığını söylerse SATIŞ KAYDETME ile kaydet.
-Müşteri: Bir müşteriden bahsederse MÜŞTERİ KAYDETME ile kaydet, uygun eser gelince hatırlat.
 
 KARAKTER HAFIZASI:
-Sana kullanıcı hakkında bilgiler verilir (tarzlar, bütçe, pazarlar, geçmiş alımlar). Bunları hatırla, sohbete kat.
+Sana kullanıcı hakkında bilgiler verilir (tarzlar, bütçe, pazarlar, geçmiş alımlar, giderler). Bunları hatırla, sohbete kat.
 
 ESER KAYDETME:
 Kaydedilecek eser varsa cevabının EN SONUNA ekle (kullanıcı görmez):
@@ -75,11 +73,17 @@ Müşteriden bahsederse cevabının EN SONUNA ekle:
 Örnek: [[MUSTERI|Ahmet Bey|bakır cezve|numarası yok]]
 İsim yoksa müşteri yaz.
 
+GİDER KAYDETME:
+Kullanıcı bir masraf ya da gider yaptığını söylerse (benzin, kira, restorasyon, pazar harcı gibi) cevabının EN SONUNA ekle:
+[[GIDER|aciklama|tutar|tarih]]
+Örnek: [[GIDER|Benzin|200 TL|bugün]]
+Sadece gerçek bir gider olduğunda ekle.
+
 Bu teknik satırlar hariç her şeyde düzgün Türkçe kullan. Kısa konuş.`;
 
 async function buildContext() {
   const parts = [`Bugünün tarihi ve saati: ${new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}`];
-  const tablolar = ['hafiza', 'eserler', 'kullanici_profili', 'alim_satim', 'musteriler'];
+  const tablolar = ['hafiza', 'eserler', 'kullanici_profili', 'alim_satim', 'musteriler', 'giderler'];
   for (const t of tablolar) {
     try {
       const { data, error } = await supabase.from(t).select('*').limit(300);
@@ -139,6 +143,11 @@ app.post('/ask', async (req, res) => {
     if (m) {
       cevap = cevap.replace(m[0], '').trim();
       try { await supabase.from('musteriler').insert({ isim:(m[1]||'').trim(), aradigi:(m[2]||'').trim(), not_:(m[3]||'').trim() }); } catch (err) {}
+    }
+    const g = cevap.match(/\[\[GIDER\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
+    if (g) {
+      cevap = cevap.replace(g[0], '').trim();
+      try { await supabase.from('giderler').insert({ aciklama:(g[1]||'').trim(), tutar:(g[2]||'').trim(), tarih:(g[3]||'').trim() }); } catch (err) {}
     }
 
     res.json({ answer: cevap });
