@@ -1,6 +1,7 @@
 import express from 'express';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
+
 const app = express();
 app.use(express.json({ limit: '25mb' }));
 app.use((req, res, next) => {
@@ -10,64 +11,49 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return res.sendStatus(200);
   next();
 });
+
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY);
 
+const FOTO_URL_BASE = process.env.SUPABASE_URL + '/storage/v1/object/public/fotograflar/';
+async function fotoYukle(base64, tip) {
+  try {
+    const uzanti = (tip && tip.includes('png')) ? 'png' : 'jpg';
+    const ad = 'eser_' + Date.now() + '.' + uzanti;
+    const buf = Buffer.from(base64, 'base64');
+    const { error } = await supabase.storage.from('fotograflar').upload(ad, buf, { contentType: tip || 'image/jpeg' });
+    if (error) return null;
+    return FOTO_URL_BASE + ad;
+  } catch (e) { return null; }
+}
+
 const SYSTEM_PROMPT = `Sen Eskice'sin. Bir antikacının yol arkadaşısın. Ona adıyla seslenirsin.
 
-MİSYONUN:
-Amacın antika satmak ya da her objeyi değerli göstermek değil. Amacın, kullanıcının daha bilinçli bir antikacı olmasına yardım etmek.
+Amacın antika satmak değil, kullanıcının daha bilinçli bir antikacı olmasına yardım etmek. Sakin, mütevazı, dürüst, sabırlı, esprili bir kişiliğin var. Bilmediğin konuda tahmin yürütmezsin.
 
-SEN KİMSİN:
-Uzun yıllardır antika dünyasının içindesin. Bir objeye baktığında sadece fiyatını değil hikayesini de görürsün.
-Kişiliğin: sakin, mütevazı, meraklı, dürüst, sabırlı, esprili. Bilmediğin konuda tahmin yürütmezsin. Kullanıcıyı asla küçük düşürmezsin.
-
-KULLANICIYLA İLİŞKİN:
-Kendini yol arkadaşı olarak görürsün. Sen cevap vermezsin, karar vermesine yardım edersin. "Ben olsam alırım çünkü" ya da "ben olsam buna para bağlamam" dersin. Son karar onun.
+Sen cevap vermezsin, karar vermesine yardım edersin. "Ben olsam alırım çünkü" ya da "ben olsam para bağlamam" dersin. Son karar onun.
 
 NASIL KONUŞURSUN:
-İnsan gibi, sohbet eder gibi. ÇOK KISA KONUŞ, en fazla üç dört cümle. Madde madde sıralama, uzun liste yapma. Önce en önemli şeyi söyle, sonra sus.
+İnsan gibi, sohbet eder gibi. ÇOK KISA KONUŞ, en fazla üç dört cümle. Madde madde sıralama yapma. Önce en önemli şeyi söyle sonra sus.
 Hiçbir yazı işareti koyma: yıldız, tire YOK. Sesli okunuyorsun.
-Düzgün tam Türkçe: ı, ş, ğ, ç, ö, ü. Para söylerken rakam ve yazıyla: "altı yüz lira, yani 600 TL".
+Düzgün tam Türkçe: ı, ş, ğ, ç, ö, ü. Para söylerken rakam ve yazıyla: altı yüz lira, yani 600 TL.
 
-KULLANICIYI TANI:
-Sana kullanıcı hakkında hafıza bilgileri verilir. Bunları hatırla ve sohbete doğal kat. "Sen Art Deco seversin ya, ben olsam buna bakardım" gibi. Onu tanıyan bir yoldaş gibi davran.
+KULLANICIYI TANI: Sana hafıza bilgileri verilir. Bunları hatırla, sohbete doğal kat. Onu tanıyan bir yoldaş gibi ol.
 
-WEB ARAŞTIRMASI:
-Kullanıcı bir eserin güncel piyasa değerini, benzer satışları ya da bir dönem hakkında güncel bilgi sorarsa web araması yap, gerçek bilgiye dayan. Kısaca özetle. Sahibinden gibi kapalı siteler aranamaz, bunu bilirsin, açık kaynaklardan genel fiyat fikri verirsin. Bulamazsan dürüstçe söyle.
+WEB ARAŞTIRMASI: Güncel piyasa değeri ya da bir dönem hakkında güncel bilgi sorulursa web araması yap, gerçek bilgiye dayan, kısaca özetle. Kapalı siteler (Sahibinden gibi) aranamaz, açık kaynaktan genel fikir verirsin. Bulamazsan dürüstçe söyle.
 
-ESER DEĞERLENDİRME:
-Eser anlatılınca ya da fotoğrafı gelince kısaca: ne olduğu, dönemi, malzeme ve durumu, tahmini değer aralığı. Kesin fiyat verme, aralık ver.
+ESER DEĞERLENDİRME: Eser anlatılınca ya da fotoğrafı gelince kısaca: ne olduğu, dönemi, malzeme ve durumu, tahmini değer aralığı. Kesin fiyat verme, aralık ver.
 
-SAHTECİLİK:
-Şüpheli işaretler: fazla yeni patina, tutmayan damga, uyumsuz malzeme, aşırı ucuz fiyat. Kesin sahte deme, emin değilsen ekspere yönlendir. Kaçak kazı ve tarihi eser kaçakçılığı yasa dışıdır, ima edilirse nazikçe uyar.
+SAHTECİLİK: Şüpheli işaretler varsa uyar ama kesin sahte deme, emin değilsen ekspere yönlendir. Kaçak kazı ve tarihi eser kaçakçılığı yasa dışıdır, ima edilirse nazikçe uyar.
 
-YENİ YETENEKLERİN:
-İlan yazma: İstenirse kısa, dürüst, alıcıyı çeken ilan metni yaz.
-Karşılaştırma: İki eseri karşılaştırırsan hangisi neden daha değerli söyle.
-Öğretme: Dönem, stil, terim sorulursa kısaca anlat.
+Ayrıca istenirse ilan metni yazarsın, iki eseri karşılaştırırsın, bir dönemi kısaca öğretirsin.
 
-HAFIZA KAYDETME:
-Kullanıcı hakkında kalıcı, ileride işine yarayacak önemli bir şey öğrenirsen (sevdiği tarz, bütçesi, gittiği pazarlar, uzmanlığı, sevmedikleri) cevabının EN SONUNA ekle:
-[[HAFIZA|bilgi]]
-Örnek: [[HAFIZA|Aylin Art Deco tarzını sever ve bütçesi kısıtlı]]
-Sadece yeni ve gerçekten önemli bir bilgi öğrenince ekle, her sohbette değil.
-
-ESER KAYDETME:
-Kaydedilecek eser varsa cevabının EN SONUNA ekle:
-[[ESER|ad|donem|tahmini_deger|durum]]
-
-SATIŞ KAYDETME:
-Alım ya da satım yaptıysa EN SONUNA ekle:
-[[ISLEM|tur|ad|fiyat|tarih]] (tur alis ya satis)
-
-MÜŞTERİ KAYDETME:
-Müşteriden bahsederse EN SONUNA ekle:
-[[MUSTERI|isim|aradigi|not]]
-
-GİDER KAYDETME:
-Masraf yaptıysa EN SONUNA ekle:
-[[GIDER|aciklama|tutar|tarih]]
+KAYIT SATIRLARI (kullanıcı görmez, cevabının EN SONUNA ekle, sadece gerçekten gerekliyse):
+Kalıcı önemli bilgi öğrenince: [[HAFIZA|bilgi]]
+Kaydedilecek eser: [[ESER|ad|donem|tahmini_deger|durum]]
+Alım ya da satım: [[ISLEM|tur|ad|fiyat|tarih]] (tur alis ya satis)
+Müşteri: [[MUSTERI|isim|aradigi|not]]
+Gider: [[GIDER|aciklama|tutar|tarih]]
 
 Bu teknik satırlar hariç düzgün Türkçe kullan. Kısa konuş.`;
 
@@ -91,8 +77,12 @@ app.post('/ask', async (req, res) => {
     const { question, dosya, gecmis } = req.body;
     if (!question && !dosya) return res.status(400).json({ error: 'soru veya dosya gerekli' });
 
+    let fotoUrl = null;
     let icerik;
     if (dosya && dosya.data) {
+      if (dosya.type && dosya.type.startsWith('image/')) {
+        fotoUrl = await fotoYukle(dosya.data, dosya.type);
+      }
       const blok = dosya.type === 'application/pdf'
         ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: dosya.data } }
         : { type: 'image', source: { type: 'base64', media_type: dosya.type, data: dosya.data } };
@@ -122,32 +112,21 @@ app.post('/ask', async (req, res) => {
     if (!cevap) cevap = 'Bir şeyler ters gitti, tekrar dener misin?';
 
     const h = cevap.match(/\[\[HAFIZA\|([^\]]*)\]\]/);
-    if (h) {
-      cevap = cevap.replace(h[0], '').trim();
-      try { await supabase.from('hafiza').insert({ icerik:(h[1]||'').trim() }); } catch (err) {}
-    }
-    const e = cevap.match(/\[\[ESER\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
-    if (e) {
-      cevap = cevap.replace(e[0], '').trim();
-      try { await supabase.from('eserler').insert({ ad:(e[1]||'').trim(), donem:(e[2]||'').trim(), tahmini_deger:(e[3]||'').trim(), durum:(e[4]||'stokta').trim() }); } catch (err) {}
-    }
-    const i = cevap.match(/\[\[ISLEM\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
-    if (i) {
-      cevap = cevap.replace(i[0], '').trim();
-      try { await supabase.from('alim_satim').insert({ tur:(i[1]||'').trim(), ad:(i[2]||'').trim(), fiyat:(i[3]||'').trim(), tarih:(i[4]||'').trim() }); } catch (err) {}
-    }
-    const m = cevap.match(/\[\[MUSTERI\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
-    if (m) {
-      cevap = cevap.replace(m[0], '').trim();
-      try { await supabase.from('musteriler').insert({ isim:(m[1]||'').trim(), aradigi:(m[2]||'').trim(), not_:(m[3]||'').trim() }); } catch (err) {}
-    }
-    const g = cevap.match(/\[\[GIDER\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
-    if (g) {
-      cevap = cevap.replace(g[0], '').trim();
-      try { await supabase.from('giderler').insert({ aciklama:(g[1]||'').trim(), tutar:(g[2]||'').trim(), tarih:(g[3]||'').trim() }); } catch (err) {}
-    }
+    if (h) { cevap = cevap.replace(h[0], '').trim(); try { await supabase.from('hafiza').insert({ icerik:(h[1]||'').trim() }); } catch (err) {} }
 
-    res.json({ answer: cevap });
+    const e = cevap.match(/\[\[ESER\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
+    if (e) { cevap = cevap.replace(e[0], '').trim(); try { await supabase.from('eserler').insert({ ad:(e[1]||'').trim(), donem:(e[2]||'').trim(), tahmini_deger:(e[3]||'').trim(), durum:(e[4]||'stokta').trim(), foto_url: fotoUrl }); } catch (err) {} }
+
+    const i = cevap.match(/\[\[ISLEM\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
+    if (i) { cevap = cevap.replace(i[0], '').trim(); try { await supabase.from('alim_satim').insert({ tur:(i[1]||'').trim(), ad:(i[2]||'').trim(), fiyat:(i[3]||'').trim(), tarih:(i[4]||'').trim() }); } catch (err) {} }
+
+    const m = cevap.match(/\[\[MUSTERI\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
+    if (m) { cevap = cevap.replace(m[0], '').trim(); try { await supabase.from('musteriler').insert({ isim:(m[1]||'').trim(), aradigi:(m[2]||'').trim(), not_:(m[3]||'').trim() }); } catch (err) {} }
+
+    const g = cevap.match(/\[\[GIDER\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
+    if (g) { cevap = cevap.replace(g[0], '').trim(); try { await supabase.from('giderler').insert({ aciklama:(g[1]||'').trim(), tutar:(g[2]||'').trim(), tarih:(g[3]||'').trim() }); } catch (err) {} }
+
+    res.json({ answer: cevap, foto: fotoUrl });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
