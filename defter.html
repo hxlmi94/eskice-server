@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Defter — Eskice</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{--bronz:#8a6435;--bronz2:#6e5323;--yazi:#5f4623;--muted:#8a7a5f;--krem:#fbf5e9;--line:#d8c39c;--yesil:#5b7048;--kirmizi:#9b4a38}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'EB Garamond',serif;color:var(--yazi);min-height:100vh;display:flex;justify-content:center;background:#e7d4ab url('https://hxlmi94.github.io/eskice-server/sohbet.png') center/cover fixed no-repeat}
+  body::before{content:"";position:fixed;inset:0;background:rgba(242,233,210,.62);z-index:0}
+  .ekran{position:relative;z-index:1;width:100%;max-width:480px;min-height:100vh;padding:20px 22px 40px;background:rgba(247,240,224,.35);border-left:1px solid rgba(138,100,53,.18);border-right:1px solid rgba(138,100,53,.18)}
+  .ust{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+  .geri{text-decoration:none;color:var(--bronz);font-size:26px;line-height:1}
+  .baslik{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--yazi);letter-spacing:1px}
+  .ozet{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:22px}
+  .kutu{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:14px;padding:14px 10px;text-align:center}
+  .kutu .rakam{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--bronz2)}
+  .kutu .etiket{font-size:12px;color:var(--muted);margin-top:3px}
+  .kutu.kar .rakam{color:var(--yesil)}
+  .liste{display:flex;flex-direction:column;gap:10px}
+  .satir{background:rgba(251,245,233,.82);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+  .satir .sol .ad{font-size:16px;font-weight:500}
+  .satir .sol .tarih{font-size:12px;color:var(--muted);font-style:italic;margin-top:2px}
+  .rozet{font-size:12px;padding:2px 9px;border-radius:20px;margin-left:8px}
+  .rozet.alis{background:#efe6d4;color:var(--bronz2)}
+  .rozet.satis{background:#e6efe0;color:var(--yesil)}
+  .fiyat{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--yazi)}
+  .bos{text-align:center;color:var(--muted);font-style:italic;padding:50px 20px;border:1px dashed var(--line);border-radius:14px}
+  .yukleniyor{text-align:center;color:var(--muted);padding:40px;font-style:italic}
+</style>
+</head>
+<body>
+  <div class="ekran">
+    <div class="ust">
+      <a class="geri" href="menu.html">‹</a>
+      <div class="baslik">Defter</div>
+    </div>
+    <div class="ozet" id="ozet"></div>
+    <div class="liste" id="liste"><div class="yukleniyor">Yükleniyor...</div></div>
+  </div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const supabase = createClient(
+  'https://SENIN-PROJEN.supabase.co',
+  'SENIN-PUBLISHABLE-ANAHTARIN'
+);
+
+const para = (s)=>{ const n = parseFloat(String(s).replace(/[^\d.,-]/g,'').replace(',','.')); return isNaN(n)?0:n; };
+const fmt = (n)=> n.toLocaleString('tr-TR') + ' TL';
+
+async function yukle(){
+  const liste = document.getElementById('liste');
+  try{
+    const { data, error } = await supabase.from('alim_satim').select('*').order('created_at',{ascending:false});
+    if(error) throw error;
+    if(!data || !data.length){ liste.innerHTML='<div class="bos">Henüz kayıt yok. Eskice ile konuşurken bir şey alıp sattığını söyle, buraya düşsün.</div>'; document.getElementById('ozet').innerHTML=''; return; }
+
+    let toplamAlis=0, toplamSatis=0;
+    data.forEach(k=>{ if((k.tur||'').includes('sat')) toplamSatis+=para(k.fiyat); else toplamAlis+=para(k.fiyat); });
+    const kar = toplamSatis - toplamAlis;
+
+    document.getElementById('ozet').innerHTML =
+      '<div class="kutu"><div class="rakam">'+fmt(toplamAlis)+'</div><div class="etiket">Alım</div></div>'+
+      '<div class="kutu"><div class="rakam">'+fmt(toplamSatis)+'</div><div class="etiket">Satım</div></div>'+
+      '<div class="kutu kar"><div class="rakam">'+fmt(kar)+'</div><div class="etiket">Kâr</div></div>';
+
+    liste.innerHTML = data.map(k=>{
+      const satis = (k.tur||'').includes('sat');
+      return '<div class="satir"><div class="sol"><div class="ad">'+(k.ad||'-')+
+        '<span class="rozet '+(satis?'satis':'alis')+'">'+(satis?'satış':'alış')+'</span></div>'+
+        '<div class="tarih">'+(k.tarih||'')+'</div></div>'+
+        '<div class="fiyat">'+(k.fiyat||'')+'</div></div>';
+    }).join('');
+  }catch(err){
+    liste.innerHTML='<div class="bos">Kayıtlar okunamadı: '+err.message+'</div>';
+  }
+}
+yukle();
+</script>
+</body>
+</html>
