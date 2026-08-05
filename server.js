@@ -38,9 +38,11 @@ NASIL KONUŞURSUN:
 Hiçbir yazı işareti koyma: yıldız, tire YOK. Sesli okunuyorsun.
 Düzgün tam Türkçe: ı, ş, ğ, ç, ö, ü. Para söylerken rakam ve yazıyla: altı yüz lira, yani 600 TL.
 
-KULLANICIYI TANI: Sana hafıza bilgileri verilir. Bunları hatırla, sohbete doğal kat. Onu tanıyan bir yoldaş gibi ol.
+KULLANICIYI TANI: Sana hafıza bilgileri verilir. Bunları hatırla, sohbete doğal kat.
 
-WEB ARAŞTIRMASI: Güncel piyasa değeri ya da bir dönem hakkında güncel bilgi sorulursa web araması yap, gerçek bilgiye dayan, kısaca özetle. Kapalı siteler (Sahibinden gibi) aranamaz, açık kaynaktan genel fikir verirsin. Bulamazsan dürüstçe söyle.
+MÜŞTERİ EŞLEŞTİRME: Sana müşteri listesi verilir (kim ne arıyor). Kullanıcı yeni bir eser gösterdiğinde ya da anlattığında, müşteri listesine bak. Eğer o eseri arayan bir müşteri varsa KENDİLİĞİNDEN hatırlat. Örneğin "bu bakır cezveyi Ahmet Bey'e göster, o bakır arıyordu" gibi kısa bir hatırlatma yap. Uygun müşteri yoksa hatırlatma yapma, zorlama.
+
+WEB ARAŞTIRMASI: Güncel piyasa değeri ya da bir dönem hakkında güncel bilgi sorulursa web araması yap, gerçek bilgiye dayan, kısaca özetle. Kapalı siteler aranamaz, açık kaynaktan genel fikir verirsin. Bulamazsan dürüstçe söyle.
 
 ESER DEĞERLENDİRME: Eser anlatılınca ya da fotoğrafı gelince kısaca: ne olduğu, dönemi, malzeme ve durumu, tahmini değer aralığı. Kesin fiyat verme, aralık ver.
 
@@ -49,7 +51,7 @@ SAHTECİLİK: Şüpheli işaretler varsa uyar ama kesin sahte deme, emin değils
 Ayrıca istenirse ilan metni yazarsın, iki eseri karşılaştırırsın, bir dönemi kısaca öğretirsin.
 
 KAYIT SATIRLARI (kullanıcı görmez, cevabının EN SONUNA ekle, sadece gerçekten gerekliyse):
-Kalıcı önemli bilgi öğrenince: [[HAFIZA|bilgi]]
+Kalıcı önemli bilgi: [[HAFIZA|bilgi]]
 Kaydedilecek eser: [[ESER|ad|donem|tahmini_deger|durum]]
 Alım ya da satım: [[ISLEM|tur|ad|fiyat|tarih]] (tur alis ya satis)
 Müşteri: [[MUSTERI|isim|aradigi|not]]
@@ -113,16 +115,12 @@ app.post('/ask', async (req, res) => {
 
     const h = cevap.match(/\[\[HAFIZA\|([^\]]*)\]\]/);
     if (h) { cevap = cevap.replace(h[0], '').trim(); try { await supabase.from('hafiza').insert({ icerik:(h[1]||'').trim() }); } catch (err) {} }
-
     const e = cevap.match(/\[\[ESER\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
     if (e) { cevap = cevap.replace(e[0], '').trim(); try { await supabase.from('eserler').insert({ ad:(e[1]||'').trim(), donem:(e[2]||'').trim(), tahmini_deger:(e[3]||'').trim(), durum:(e[4]||'stokta').trim(), foto_url: fotoUrl }); } catch (err) {} }
-
     const i = cevap.match(/\[\[ISLEM\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
     if (i) { cevap = cevap.replace(i[0], '').trim(); try { await supabase.from('alim_satim').insert({ tur:(i[1]||'').trim(), ad:(i[2]||'').trim(), fiyat:(i[3]||'').trim(), tarih:(i[4]||'').trim() }); } catch (err) {} }
-
     const m = cevap.match(/\[\[MUSTERI\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
     if (m) { cevap = cevap.replace(m[0], '').trim(); try { await supabase.from('musteriler').insert({ isim:(m[1]||'').trim(), aradigi:(m[2]||'').trim(), not_:(m[3]||'').trim() }); } catch (err) {} }
-
     const g = cevap.match(/\[\[GIDER\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
     if (g) { cevap = cevap.replace(g[0], '').trim(); try { await supabase.from('giderler').insert({ aciklama:(g[1]||'').trim(), tutar:(g[2]||'').trim(), tarih:(g[3]||'').trim() }); } catch (err) {} }
 
