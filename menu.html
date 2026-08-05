@@ -4,93 +4,72 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Eskice</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <style>
-  :root{--bronz:#8a6435;--bronz2:#6e5323;--altin:#b98f4e;--yazi:#5f4623;--krem:#fbf5e9;--line:#d8c39c}
+  :root{--bronz:#8a6435;--altin:#b98f4e;--yazi:#5f4623;--krem:#fbf5e9;--line:#d8c39c}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{
-    font-family:'EB Garamond',serif;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;
-    background:#e7d4ab url('https://hxlmi94.github.io/eskice-server/sohbet.png') center/cover fixed no-repeat;
-  }
+  body{font-family:'EB Garamond',serif;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;background:#e7d4ab url('https://hxlmi94.github.io/eskice-server/sohbet.png') center/cover fixed no-repeat}
   body::before{content:"";position:fixed;inset:0;background:rgba(241,231,206,.6);z-index:0}
-  .ekran{position:relative;z-index:1;width:100%;max-width:480px;min-height:100vh;padding:44px 26px 40px;
-    background:rgba(247,240,224,.32);border-left:1px solid rgba(138,100,53,.18);border-right:1px solid rgba(138,100,53,.18)}
-
-  /* Cep saati logosu */
-  .amblem{display:flex;justify-content:center;margin-bottom:6px;animation:bel .8s ease both}
-  .amblem svg{width:54px;height:54px}
-
-  .ad{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:48px;color:var(--yazi);letter-spacing:6px;text-align:center;line-height:1;animation:bel .8s .05s ease both}
-  .alt{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px;color:var(--bronz);text-align:center;margin-top:4px;animation:bel .8s .1s ease both}
-
-  /* yaldız süs çizgisi */
-  .susleme{display:flex;align-items:center;justify-content:center;gap:10px;margin:16px 0 10px;color:var(--altin);animation:bel .8s .15s ease both}
-  .susleme .cizgi{height:1px;width:60px;background:linear-gradient(90deg,transparent,var(--altin))}
+  .ekran{position:relative;z-index:1;width:100%;max-width:480px;min-height:100vh;padding:40px 26px;background:rgba(247,240,224,.32);border-left:1px solid rgba(138,100,53,.18);border-right:1px solid rgba(138,100,53,.18)}
+  .amblem{display:flex;justify-content:center;margin-bottom:6px}
+  .amblem svg{width:52px;height:52px}
+  .ad{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:46px;color:var(--yazi);letter-spacing:6px;text-align:center;line-height:1}
+  .alt{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px;color:var(--bronz);text-align:center;margin-top:4px}
+  .susleme{display:flex;align-items:center;justify-content:center;gap:10px;margin:16px 0 8px;color:var(--altin)}
+  .susleme .cizgi{height:1px;width:56px;background:linear-gradient(90deg,transparent,var(--altin))}
   .susleme .cizgi.sag{background:linear-gradient(90deg,var(--altin),transparent)}
-  .susleme svg{width:16px;height:16px}
-
-  .selam{text-align:center;font-size:16.5px;color:#6e5836;font-style:italic;margin:6px 0 26px;animation:bel .8s .2s ease both}
-
+  .susleme svg{width:15px;height:15px}
+  .selam{text-align:center;font-size:16px;color:#6e5836;font-style:italic;margin:6px 0 26px}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .kart{background:rgba(251,245,233,.82);border:1px solid var(--line);border-radius:16px;padding:22px 12px 20px;
-    display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer;text-decoration:none;
-    box-shadow:0 1px 3px rgba(90,70,40,.1);transition:transform .15s ease,box-shadow .15s ease,background .15s ease;
-    opacity:0;animation:yuksel .6s ease forwards}
-  .kart:hover{transform:translateY(-3px);background:rgba(253,248,238,.95);box-shadow:0 8px 20px rgba(110,83,35,.18)}
-  .kart svg{width:34px;height:34px;color:var(--bronz)}
-  .kart .et{font-family:'EB Garamond',serif;font-size:16px;color:var(--yazi);font-weight:500;letter-spacing:.3px}
-
+  .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:16px;padding:22px 12px;display:flex;flex-direction:column;align-items:center;gap:11px;cursor:pointer;text-decoration:none;box-shadow:0 1px 3px rgba(90,70,40,.1);transition:transform .15s,box-shadow .15s,background .15s}
+  .kart:hover{transform:translateY(-3px);background:rgba(253,248,238,.97);box-shadow:0 8px 20px rgba(110,83,35,.18)}
+  .kart svg{width:32px;height:32px;color:var(--bronz)}
+  .kart .et{font-size:16px;color:var(--yazi);font-weight:500}
   .sohbet{grid-column:1 / -1;background:linear-gradient(160deg,#9a7238,#6e5323);border:none;padding:24px 12px}
-  .sohbet svg{width:40px;height:40px;color:var(--krem)}
+  .sohbet svg{width:38px;height:38px;color:var(--krem)}
   .sohbet .et{color:var(--krem);font-size:19px;letter-spacing:1px}
-
-  .kart:nth-child(1){animation-delay:.25s}
-  .kart:nth-child(2){animation-delay:.33s}
-  .kart:nth-child(3){animation-delay:.4s}
-  .kart:nth-child(4){animation-delay:.47s}
-  .kart:nth-child(5){animation-delay:.54s}
-
-  @keyframes bel{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
-  @keyframes yuksel{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
   <div class="ekran">
-
-    <!-- Cep saati amblemi -->
     <div class="amblem">
       <svg viewBox="0 0 64 64" fill="none" stroke="#8a6435" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="32" cy="36" r="20"/>
         <circle cx="32" cy="36" r="2.4" fill="#8a6435" stroke="none"/>
-        <path d="M32 36 L32 25" />
-        <path d="M32 36 L40 40" />
-        <circle cx="32" cy="12" r="4"/>
-        <path d="M27 15 l-4 3 M37 15 l4 3"/>
-        <path d="M29 16 l6 0"/>
+        <path d="M32 36 L32 25"/><path d="M32 36 L40 40"/>
+        <circle cx="32" cy="12" r="4"/><path d="M27 15 l-4 3 M37 15 l4 3"/><path d="M29 16 l6 0"/>
       </svg>
     </div>
-
     <div class="ad">Eskice</div>
     <div class="alt">antika yoldaşın</div>
-
     <div class="susleme">
       <span class="cizgi"></span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3 l2 7 7 2 -7 2 -2 7 -2 -7 -7 -2 7 -2z"/></svg>
       <span class="cizgi sag"></span>
     </div>
-
     <div class="selam">Hoş geldin Aylin. Ne yapalım bugün?</div>
-
     <div class="grid">
       <a class="kart sohbet" href="index.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="9" y="2" width="6" height="12" rx="3"/>
-          <path d="M6 11 a6 6 0 0 0 12 0"/>
-          <path d="M12 17 v4 M8 21 h8"/>
-        </svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M6 11 a6 6 0 0 0 12 0"/><path d="M12 17 v4 M8 21 h8"/></svg>
         <span class="et">Eskice ile Konuş</span>
       </a>
-
       <a class="kart" href="eserlerim.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 3 h6 M10 3 c0 3 -3 3 -3 7 v6 a5 5 0 0 0 10 0 v-6 c0 -4 -3 -4 -3
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 h6 M10 3 c0 3 -3 3 -3 7 v6 a5 5 0 0 0 10 0 v-6 c0 -4 -3 -4 -3 -7"/><path d="M7 13 h10"/></svg>
+        <span class="et">Eserlerim</span>
+      </a>
+      <a class="kart" href="defter.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6 c-2 -1.5 -5 -1.5 -7 0 v12 c2 -1.5 5 -1.5 7 0 c2 -1.5 5 -1.5 7 0 v-12 c-2 -1.5 -5 -1.5 -7 0z"/><path d="M12 6 v12"/></svg>
+        <span class="et">Defter</span>
+      </a>
+      <a class="kart" href="musteriler.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 20 c0 -4 3 -6 7 -6 s7 2 7 6"/></svg>
+        <span class="et">Müşteriler</span>
+      </a>
+      <a class="kart" href="ayarlar.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2 v3 M12 19 v3 M2 12 h3 M19 12 h3 M4.9 4.9 l2.1 2.1 M17 17 l2.1 2.1 M19.1 4.9 l-2.1 2.1 M7 17 l-2.1 2.1"/></svg>
+        <span class="et">Ayarlar</span>
+      </a>
+    </div>
+  </div>
+</body>
+</html>
