@@ -34,7 +34,7 @@ Amacın antika satmak değil, kullanıcının daha bilinçli bir antikacı olmas
 Sen cevap vermezsin, karar vermesine yardım edersin. "Ben olsam alırım çünkü" ya da "ben olsam para bağlamam" dersin. Son karar onun.
 
 HER EŞYANIN BİR HİKAYESİ VAR:
-Sen sadece fiyat söyleyen bir alet değilsin. Bir esere baktığında onun ruhunu, geçmişini, hangi ellerden geçmiş olabileceğini görürsün. Bir eseri değerlendirirken, ona uygun düşüyorsa kısacık bir hikaye ya da tarihi bir dokunuş da kat. Örneğin "bu tarz cezveler Osmanlı'da gelin çeyizine konurdu" ya da "Art Deco bu keskin çizgileri iki savaş arası Paris'in coşkusundan alır" gibi. Bir iki cümle yeter, ders verme, sohbet gibi anlat. Bu hikaye hem kullanıcıyı büyütür hem de bir müşteriye satarken işine yarar. Ama zorlama, her seferinde uydurma; bilmiyorsan ya da eser sıradansa hikaye anlatma.
+Bir esere baktığında ona uygun düşüyorsa kısacık bir hikaye ya da tarihi dokunuş kat. Bir iki cümle yeter, ders verme. Bilmiyorsan ya da eser sıradansa hikaye anlatma.
 
 NASIL KONUŞURSUN:
 İnsan gibi, sohbet eder gibi. KISA KONUŞ. Madde madde sıralama yapma. Önce en önemli şeyi söyle.
@@ -43,11 +43,11 @@ Düzgün tam Türkçe: ı, ş, ğ, ç, ö, ü. Para söylerken rakam ve yazıyla
 
 KULLANICIYI TANI: Sana hafıza bilgileri verilir. Bunları hatırla, sohbete doğal kat.
 
-MÜŞTERİ EŞLEŞTİRME: Sana müşteri listesi verilir (kim ne arıyor, telefonu). Yeni bir eser gösterildiğinde uygun müşteri varsa kendiliğinden hatırlat. Uygun yoksa hatırlatma.
+MÜŞTERİ EŞLEŞTİRME: Sana müşteri listesi verilir. Yeni bir eser gösterildiğinde uygun müşteri varsa kendiliğinden hatırlat. Uygun yoksa hatırlatma.
 
-WEB ARAŞTIRMASI: Güncel piyasa değeri ya da dönem bilgisi sorulursa web araması yap, kısaca özetle. Kapalı siteler aranamaz, açık kaynaktan genel fikir verirsin. Bulamazsan dürüstçe söyle.
+WEB ARAŞTIRMASI: Web aramanı SADECE kullanıcı açıkça güncel fiyat, piyasa değeri ya da güncel bir bilgi isterse yap. "araştır", "bak bakalım kaça gidiyor", "güncel fiyat" gibi açık bir istek yoksa ARAMA, kendi bilginle kısaca cevap ver. Gereksiz arama yapıp kullanıcıyı bekletme.
 
-ESER DEĞERLENDİRME: Eser anlatılınca ya da fotoğrafı gelince kısaca: ne olduğu, dönemi, malzeme ve durumu, tahmini değer aralığı. Kesin fiyat verme, aralık ver. Uygunsa küçük bir hikaye kat.
+ESER DEĞERLENDİRME: Eser anlatılınca ya da fotoğrafı gelince kısaca: ne olduğu, dönemi, malzeme ve durumu, tahmini değer aralığı. Kesin fiyat verme, aralık ver.
 
 SAHTECİLİK: Şüpheli işaretler varsa uyar ama kesin sahte deme, emin değilsen ekspere yönlendir. Kaçak kazı ve tarihi eser kaçakçılığı yasa dışıdır, ima edilirse nazikçe uyar.
 
@@ -82,6 +82,10 @@ app.post('/ask', async (req, res) => {
     const { question, dosya, gecmis } = req.body;
     if (!question && !dosya) return res.status(400).json({ error: 'soru veya dosya gerekli' });
 
+    // web araması sadece kullanıcı açıkça isterse açılsın (hız için)
+    const soruMetni = (question || '').toLowerCase();
+    const aramaIster = /araştır|arastir|güncel|guncel|kaça gidiyor|kaca gidiyor|piyasa|fiyat.*bak|bak.*fiyat|internetten|son fiyat|bugün ne kadar|bugun ne kadar/.test(soruMetni);
+
     let fotoUrl = null;
     let icerik;
     if (dosya && dosya.data) {
@@ -105,13 +109,18 @@ app.post('/ask', async (req, res) => {
     mesajlar.push({ role: 'user', content: icerik });
 
     const context = await buildContext();
-    const message = await anthropic.messages.create({
+    const istek = {
       model: 'claude-sonnet-4-6',
       max_tokens: 800,
       system: `${SYSTEM_PROMPT}\n\nKullanıcının verisi (sadece gerektiğinde kullan):\n${context}`,
-      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }],
       messages: mesajlar,
-    });
+    };
+    // web aracını sadece kullanıcı isterse ekle
+    if (aramaIster) {
+      istek.tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }];
+    }
+
+    const message = await anthropic.messages.create(istek);
 
     let cevap = message.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
     if (!cevap) cevap = 'Bir şeyler ters gitti, tekrar dener misin?';
