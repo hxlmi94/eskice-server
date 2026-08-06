@@ -27,7 +27,6 @@
   .bt{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-size:13px;padding:6px 14px;border-radius:20px;border:1px solid var(--line)}
   .bt.ara{background:rgba(138,100,53,.1);color:var(--bronz2)}
   .bt.wp{background:rgba(74,122,74,.12);color:var(--yesil)}
-  .bt:hover{filter:brightness(.97)}
   .telyok{font-size:12px;color:var(--muted);font-style:italic;margin-top:8px}
   .bos{text-align:center;color:var(--muted);font-style:italic;padding:40px 16px;border:1px dashed var(--line);border-radius:14px}
   .yukleniyor{text-align:center;color:var(--muted);padding:40px;font-style:italic}
@@ -46,16 +45,15 @@
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 const supabase = createClient(
-  'https://SENIN-PROJEN.supabase.co',
-  'SENIN-PUBLISHABLE-ANAHTARIN'
+  'https://mepfyrnmscrqbzxlbjyf.supabase.co',
+  'sb_publishable_QE5BnaX_nvb36agQ0t0GNw_wkASsY06'
 );
 
-// telefonu temizle: sadece rakam, wp için 90'lı hale getir
 function temizTel(t){ return String(t||'').replace(/[^\d+]/g,''); }
 function wpTel(t){
   let n = String(t||'').replace(/\D/g,'');
-  if(n.startsWith('0')) n = '9'+ '0' + n.slice(1); // 05xx -> 905xx
-  else if(!n.startsWith('90') && n.length===10) n = '90'+n; // 5xx -> 905xx
+  if(n.startsWith('0')) n = '90'+n.slice(1);
+  else if(!n.startsWith('90') && n.length===10) n = '90'+n;
   return n;
 }
 
