@@ -14,13 +14,12 @@
   .ust{display:flex;align-items:center;gap:12px;margin-bottom:22px}
   .geri{text-decoration:none;color:var(--bronz);font-size:28px;line-height:1}
   .baslik{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--yazi);letter-spacing:1px}
-  .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:16px;padding:18px 18px;margin-bottom:16px}
-  .kart .etiket{font-size:13px;color:var(--muted);margin-bottom:8px;letter-spacing:.5px}
-  .kart input[type=text]{width:100%;background:#fffdf7;border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--yazi);font-family:'EB Garamond',serif;font-size:16px}
-  .kart input:focus{outline:none;border-color:var(--bronz)}
+  .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px}
+  .etiket{font-size:13px;color:var(--muted);margin-bottom:8px;letter-spacing:.5px}
+  input[type=text]{width:100%;background:#fffdf7;border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--yazi);font-family:'EB Garamond',serif;font-size:16px}
+  input[type=text]:focus{outline:none;border-color:var(--bronz)}
   .satir{display:flex;justify-content:space-between;align-items:center}
   .satir .ad{font-size:17px;color:var(--yazi)}
-  /* switch */
   .switch{position:relative;width:52px;height:30px;flex-shrink:0}
   .switch input{display:none}
   .kaydir{position:absolute;inset:0;background:#d8c9ab;border-radius:30px;transition:.2s;cursor:pointer}
@@ -28,7 +27,6 @@
   .switch input:checked + .kaydir{background:var(--bronz)}
   .switch input:checked + .kaydir::before{transform:translateX(22px)}
   .kaydet{width:100%;background:linear-gradient(180deg,#a97c46,#8a6435);color:var(--krem);border:none;border-radius:12px;padding:14px;font-family:'EB Garamond',serif;font-size:17px;cursor:pointer;margin-top:4px}
-  .kaydet:hover{filter:brightness(1.06)}
   .hakkinda{font-size:15px;color:var(--muted);line-height:1.6;font-style:italic}
   .surum{text-align:center;font-size:12px;color:var(--muted);margin-top:20px}
   .bilgi{text-align:center;color:var(--yesil);font-size:14px;margin-top:10px;min-height:18px}
@@ -43,7 +41,7 @@
 
     <div class="kart">
       <div class="etiket">SENİN ADIN</div>
-      <input type="text" id="isim" placeholder="Adını yaz (Eskice sana böyle seslenir)">
+      <input type="text" id="isim" placeholder="Adını yaz">
     </div>
 
     <div class="kart">
@@ -66,18 +64,16 @@
   </div>
 
 <script>
-  // kayıtlı ayarları yükle
   const isimEl = document.getElementById('isim');
   const sesEl = document.getElementById('ses');
   isimEl.value = localStorage.getItem('eskice_isim') || '';
-  sesEl.checked = localStorage.getItem('eskice_ses') !== 'kapali'; // varsayılan açık
-
-  document.getElementById('kaydetBtn').onclick = ()=>{
+  sesEl.checked = localStorage.getItem('eskice_ses') !== 'kapali';
+  document.getElementById('kaydetBtn').onclick = function(){
     localStorage.setItem('eskice_isim', isimEl.value.trim());
     localStorage.setItem('eskice_ses', sesEl.checked ? 'acik' : 'kapali');
     const b = document.getElementById('bilgi');
-    b.textContent = '✓ Kaydedildi';
-    setTimeout(()=> b.textContent='', 2000);
+    b.textContent = 'Kaydedildi';
+    setTimeout(function(){ b.textContent=''; }, 2000);
   };
 </script>
 </body>
