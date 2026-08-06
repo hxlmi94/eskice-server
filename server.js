@@ -15,6 +15,21 @@ app.use((req, res, next) => {
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY);
 
+// TEST: kaydın çalışıp çalışmadığını gösterir
+app.get('/test', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('musteriler').insert({
+      isim: 'TEST Zeynep', aradigi: 'gümüş tepsi', telefon: '05551234567', not_: 'test kaydı'
+    }).select();
+    if (error) {
+      return res.send('KAYIT BAŞARISIZ ✗\n\nHata: ' + JSON.stringify(error, null, 2));
+    }
+    return res.send('KAYIT BAŞARILI ✓\n\nYazılan: ' + JSON.stringify(data, null, 2) + '\n\nMüşteriler ekranını yenile, TEST Zeynep görünmeli.');
+  } catch (err) {
+    return res.send('KAYIT BAŞARISIZ ✗ (istisna)\n\n' + err.message);
+  }
+});
+
 const FOTO_URL_BASE = process.env.SUPABASE_URL + '/storage/v1/object/public/fotograflar/';
 async function fotoYukle(base64, tip) {
   try {
@@ -29,50 +44,39 @@ async function fotoYukle(base64, tip) {
 
 const SYSTEM_PROMPT = `Sen Eskice'sin. Bir antikacının yol arkadaşısın. Ona adıyla seslenirsin.
 
-Amacın antika satmak değil, kullanıcının daha bilinçli bir antikacı olmasına yardım etmek. Sakin, mütevazı, dürüst, sabırlı, esprili bir kişiliğin var. Bilmediğin konuda tahmin yürütmezsin.
+Amacın antika satmak değil, kullanıcının daha bilinçli bir antikacı olmasına yardım etmek. Sakin, mütevazı, dürüst, sabırlı, esprili bir kişiliğin var.
 
-Sen cevap vermezsin, karar vermesine yardım edersin. "Ben olsam alırım çünkü" ya da "ben olsam para bağlamam" dersin. Son karar onun.
+Sen cevap vermezsin, karar vermesine yardım edersin. "Ben olsam alırım çünkü" ya da "ben olsam para bağlamam" dersin.
 
-HER EŞYANIN BİR HİKAYESİ VAR:
-Bir esere baktığında ona uygun düşüyorsa kısacık bir hikaye ya da tarihi dokunuş kat. Bir iki cümle yeter, ders verme. Bilmiyorsan ya da eser sıradansa hikaye anlatma.
+Bir esere baktığında uygunsa kısacık bir hikaye kat, ama zorlama.
 
-NASIL KONUŞURSUN:
-İnsan gibi, sohbet eder gibi. KISA KONUŞ. Madde madde sıralama yapma. Önce en önemli şeyi söyle.
-Hiçbir yazı işareti koyma: yıldız, tire YOK. Sesli okunuyorsun.
-Düzgün tam Türkçe: ı, ş, ğ, ç, ö, ü. Para söylerken rakam ve yazıyla: altı yüz lira, yani 600 TL.
+NASIL KONUŞURSUN: İnsan gibi, KISA. Madde işareti, yıldız, tire YOK. Düzgün Türkçe: ı, ş, ğ, ç, ö, ü. Para: altı yüz lira, yani 600 TL.
 
-KULLANICIYI TANI: Sana hafıza bilgileri verilir. Bunları hatırla, sohbete doğal kat.
+KULLANICIYI TANI: Sana hafıza ve müşteri listesi verilir. Hatırla, sohbete kat. Yeni eser gelince uygun müşteri varsa hatırlat.
 
-MÜŞTERİ EŞLEŞTİRME: Sana müşteri listesi verilir. Yeni bir eser gösterildiğinde uygun müşteri varsa kendiliğinden hatırlat. Uygun yoksa hatırlatma.
+WEB ARAŞTIRMASI: Sadece kullanıcı açıkça güncel fiyat/piyasa isterse yap, yoksa arama.
 
-WEB ARAŞTIRMASI: Web aramanı SADECE kullanıcı açıkça güncel fiyat, piyasa değeri ya da güncel bir bilgi isterse yap. "araştır", "bak bakalım kaça gidiyor", "güncel fiyat" gibi açık bir istek yoksa ARAMA, kendi bilginle kısaca cevap ver. Gereksiz arama yapıp kullanıcıyı bekletme.
+ESER DEĞERLENDİRME: Ne olduğu, dönemi, malzeme/durumu, tahmini değer aralığı. Kesin fiyat verme.
 
-ESER DEĞERLENDİRME: Eser anlatılınca ya da fotoğrafı gelince kısaca: ne olduğu, dönemi, malzeme ve durumu, tahmini değer aralığı. Kesin fiyat verme, aralık ver.
-
-SAHTECİLİK: Şüpheli işaretler varsa uyar ama kesin sahte deme, emin değilsen ekspere yönlendir. Kaçak kazı ve tarihi eser kaçakçılığı yasa dışıdır, ima edilirse nazikçe uyar.
-
-Ayrıca istenirse ilan metni yazarsın, iki eseri karşılaştırırsın.
-
-KAYIT SATIRLARI (kullanıcı görmez, cevabının EN SONUNA ekle, sadece gerçekten gerekliyse):
-Kalıcı önemli bilgi: [[HAFIZA|bilgi]]
-Kaydedilecek eser: [[ESER|ad|donem|tahmini_deger|durum]]
-Alım ya da satım: [[ISLEM|tur|ad|fiyat|tarih]] (tur alis ya satis)
-Müşteri: [[MUSTERI|isim|aradigi|telefon|not]]  (telefon yoksa boş bırak)
-Gider: [[GIDER|aciklama|tutar|tarih]]
+KAYIT SATIRLARI — ÇOK ÖNEMLİ: Aşağıdaki durumlarda cevabının EN SONUNA ilgili satırı MUTLAKA ekle. Kullanıcı bu satırı görmez. Kaydettim demen yetmez, satırı gerçekten eklemelisin.
+Kullanıcı hakkında kalıcı bilgi öğrenince: [[HAFIZA|bilgi]]
+Bir eser kaydedilecekse: [[ESER|ad|donem|tahmini_deger|durum]]
+Alım ya da satım olduysa: [[ISLEM|tur|ad|fiyat|tarih]]
+Bir müşteriden bahsedilince: [[MUSTERI|isim|aradigi|telefon|not]]
+Bir gider olduysa: [[GIDER|aciklama|tutar|tarih]]
+Örnek: kullanıcı "Zeynep gümüş arıyor, no 0555..." derse cevabının sonuna [[MUSTERI|Zeynep|gümüş tepsi|0555...|]] ekle.
 
 Bu teknik satırlar hariç düzgün Türkçe kullan.`;
 
 async function buildContext() {
-  const parts = [`Bugünün tarihi ve saati: ${new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}`];
+  const parts = [`Bugün: ${new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}`];
   const tablolar = ['hafiza', 'eserler', 'kullanici_profili', 'alim_satim', 'musteriler', 'giderler'];
   for (const t of tablolar) {
     try {
       const { data, error } = await supabase.from(t).select('*').limit(300);
       if (error) throw error;
       if (data && data.length) parts.push(`## ${t}\n${JSON.stringify(data)}`);
-    } catch (err) {
-      parts.push(`## ${t}\n(okunamadı: ${err.message})`);
-    }
+    } catch (err) { parts.push(`## ${t}\n(okunamadı)`); }
   }
   return parts.join('\n\n');
 }
@@ -82,29 +86,22 @@ app.post('/ask', async (req, res) => {
     const { question, dosya, gecmis } = req.body;
     if (!question && !dosya) return res.status(400).json({ error: 'soru veya dosya gerekli' });
 
-    // web araması sadece kullanıcı açıkça isterse açılsın (hız için)
     const soruMetni = (question || '').toLowerCase();
-    const aramaIster = /araştır|arastir|güncel|guncel|kaça gidiyor|kaca gidiyor|piyasa|fiyat.*bak|bak.*fiyat|internetten|son fiyat|bugün ne kadar|bugun ne kadar/.test(soruMetni);
+    const aramaIster = /araştır|arastir|güncel|guncel|kaça gidiyor|piyasa|internetten|son fiyat/.test(soruMetni);
 
     let fotoUrl = null;
     let icerik;
     if (dosya && dosya.data) {
-      if (dosya.type && dosya.type.startsWith('image/')) {
-        fotoUrl = await fotoYukle(dosya.data, dosya.type);
-      }
+      if (dosya.type && dosya.type.startsWith('image/')) fotoUrl = await fotoYukle(dosya.data, dosya.type);
       const blok = dosya.type === 'application/pdf'
         ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: dosya.data } }
         : { type: 'image', source: { type: 'base64', media_type: dosya.type, data: dosya.data } };
-      icerik = [blok, { type: 'text', text: question || 'Bu eseri kısaca değerlendir: ne olduğu, dönemi, durumu, tahmini değer aralığı. Uygunsa küçük bir hikaye kat.' }];
-    } else {
-      icerik = question;
-    }
+      icerik = [blok, { type: 'text', text: question || 'Bu eseri kısaca değerlendir.' }];
+    } else { icerik = question; }
 
     const mesajlar = [];
     if (Array.isArray(gecmis)) {
-      gecmis.slice(-14).forEach(m => {
-        if (m && m.rol && m.metin) mesajlar.push({ role: m.rol === 'eskice' ? 'assistant' : 'user', content: m.metin });
-      });
+      gecmis.slice(-14).forEach(m => { if (m && m.rol && m.metin) mesajlar.push({ role: m.rol === 'eskice' ? 'assistant' : 'user', content: m.metin }); });
     }
     mesajlar.push({ role: 'user', content: icerik });
 
@@ -112,16 +109,12 @@ app.post('/ask', async (req, res) => {
     const istek = {
       model: 'claude-sonnet-4-6',
       max_tokens: 800,
-      system: `${SYSTEM_PROMPT}\n\nKullanıcının verisi (sadece gerektiğinde kullan):\n${context}`,
+      system: `${SYSTEM_PROMPT}\n\nKullanıcının verisi:\n${context}`,
       messages: mesajlar,
     };
-    // web aracını sadece kullanıcı isterse ekle
-    if (aramaIster) {
-      istek.tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }];
-    }
+    if (aramaIster) istek.tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }];
 
     const message = await anthropic.messages.create(istek);
-
     let cevap = message.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
     if (!cevap) cevap = 'Bir şeyler ters gitti, tekrar dener misin?';
 
@@ -151,19 +144,13 @@ app.post('/ses', async (req, res) => {
     const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: 'POST',
       headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text: metin,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: { stability: 0.4, similarity_boost: 0.85, style: 0.25, use_speaker_boost: true },
-      }),
+      body: JSON.stringify({ text: metin, model_id: 'eleven_multilingual_v2', voice_settings: { stability: 0.4, similarity_boost: 0.85, style: 0.25, use_speaker_boost: true } }),
     });
     if (!r.ok) { const t = await r.text(); return res.status(500).json({ error: t }); }
     const buf = Buffer.from(await r.arrayBuffer());
     res.set('Content-Type', 'audio/mpeg');
     res.send(buf);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get('/', (req, res) => { res.send('Eskice sunucusu çalışıyor.'); });
