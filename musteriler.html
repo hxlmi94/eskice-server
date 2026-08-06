@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Müşteriler — Eskice</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{--bronz:#8a6435;--bronz2:#6e5323;--yazi:#5f4623;--muted:#8a7a5f;--krem:#fbf5e9;--line:#d8c39c;--yesil:#4a7a4a}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'EB Garamond',serif;color:var(--yazi);min-height:100vh;display:flex;justify-content:center;background:#e7d4ab url('https://hxlmi94.github.io/eskice-server/sohbet.png') center/cover fixed no-repeat}
+  body::before{content:"";position:fixed;inset:0;background:rgba(242,233,210,.62);z-index:0}
+  .ekran{position:relative;z-index:1;width:100%;max-width:480px;min-height:100vh;padding:20px 22px 40px;background:rgba(247,240,224,.35);border-left:1px solid rgba(138,100,53,.18);border-right:1px solid rgba(138,100,53,.18)}
+  .ust{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .geri{text-decoration:none;color:var(--bronz);font-size:28px;line-height:1}
+  .baslik{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--yazi);letter-spacing:1px}
+  .sayi{font-size:14px;color:var(--muted);font-style:italic;margin-bottom:18px;margin-left:40px}
+  .liste{display:flex;flex-direction:column;gap:11px}
+  .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start}
+  .avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(160deg,#b98f4e,#8a6435);color:var(--krem);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:20px;flex-shrink:0}
+  .govde{flex:1;min-width:0}
+  .kart .isim{font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--yazi)}
+  .kart .ariyor{font-size:14px;color:var(--bronz2);margin-top:2px}
+  .kart .ariyor b{font-weight:500}
+  .kart .not{font-size:13px;color:var(--muted);font-style:italic;margin-top:3px}
+  .butonlar{display:flex;gap:8px;margin-top:10px}
+  .bt{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-size:13px;padding:6px 14px;border-radius:20px;border:1px solid var(--line)}
+  .bt.ara{background:rgba(138,100,53,.1);color:var(--bronz2)}
+  .bt.wp{background:rgba(74,122,74,.12);color:var(--yesil)}
+  .bt:hover{filter:brightness(.97)}
+  .telyok{font-size:12px;color:var(--muted);font-style:italic;margin-top:8px}
+  .bos{text-align:center;color:var(--muted);font-style:italic;padding:40px 16px;border:1px dashed var(--line);border-radius:14px}
+  .yukleniyor{text-align:center;color:var(--muted);padding:40px;font-style:italic}
+</style>
+</head>
+<body>
+  <div class="ekran">
+    <div class="ust">
+      <a class="geri" href="menu.html">‹</a>
+      <div class="baslik">Müşteriler</div>
+    </div>
+    <div class="sayi" id="sayi"></div>
+    <div class="liste" id="liste"><div class="yukleniyor">Yükleniyor...</div></div>
+  </div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const supabase = createClient(
+  'https://SENIN-PROJEN.supabase.co',
+  'SENIN-PUBLISHABLE-ANAHTARIN'
+);
+
+// telefonu temizle: sadece rakam, wp için 90'lı hale getir
+function temizTel(t){ return String(t||'').replace(/[^\d+]/g,''); }
+function wpTel(t){
+  let n = String(t||'').replace(/\D/g,'');
+  if(n.startsWith('0')) n = '9'+ '0' + n.slice(1); // 05xx -> 905xx
+  else if(!n.startsWith('90') && n.length===10) n = '90'+n; // 5xx -> 905xx
+  return n;
+}
+
+async function yukle(){
+  const liste = document.getElementById('liste');
+  try{
+    const { data, error } = await supabase.from('musteriler').select('*').order('created_at',{ascending:false});
+    if(error) throw error;
+    if(!data || !data.length){
+      liste.innerHTML='<div class="bos">Henüz müşteri yok. Eskice ile konuşurken bir müşteriden ve numarasından bahsettiğinde buraya düşer.</div>';
+      document.getElementById('sayi').textContent=''; return;
+    }
+    document.getElementById('sayi').textContent = data.length + ' müşteri';
+    liste.innerHTML = data.map(m=>{
+      const harf = (m.isim||'?').trim().charAt(0).toUpperCase();
+      const tel = (m.telefon||'').trim();
+      let butonlar = '';
+      if(tel){
+        butonlar = '<div class="butonlar">'+
+          '<a class="bt ara" href="tel:'+temizTel(tel)+'">📞 Ara</a>'+
+          '<a class="bt wp" href="https://wa.me/'+wpTel(tel)+'" target="_blank">💬 WhatsApp</a>'+
+          '</div>';
+      } else {
+        butonlar = '<div class="telyok">numara yok</div>';
+      }
+      return '<div class="kart"><div class="avatar">'+harf+'</div><div class="govde">'+
+        '<div class="isim">'+(m.isim||'Müşteri')+'</div>'+
+        (m.aradigi?'<div class="ariyor">arıyor: <b>'+m.aradigi+'</b></div>':'')+
+        (m.not_?'<div class="not">'+m.not_+'</div>':'')+
+        butonlar+'</div></div>';
+    }).join('');
+  }catch(err){
+    liste.innerHTML='<div class="bos">Okunamadı: '+err.message+'</div>';
+  }
+}
+yukle();
+</script>
+</body>
+</html>
