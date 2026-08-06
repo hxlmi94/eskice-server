@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ayarlar — Eskice</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{--bronz:#8a6435;--bronz2:#6e5323;--yazi:#5f4623;--muted:#8a7a5f;--krem:#fbf5e9;--line:#d8c39c;--yesil:#5b7048}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'EB Garamond',serif;color:var(--yazi);min-height:100vh;display:flex;justify-content:center;background:#e7d4ab url('https://hxlmi94.github.io/eskice-server/sohbet.png') center/cover fixed no-repeat}
+  body::before{content:"";position:fixed;inset:0;background:rgba(242,233,210,.62);z-index:0}
+  .ekran{position:relative;z-index:1;width:100%;max-width:480px;min-height:100vh;padding:20px 22px 40px;background:rgba(247,240,224,.35);border-left:1px solid rgba(138,100,53,.18);border-right:1px solid rgba(138,100,53,.18)}
+  .ust{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+  .geri{text-decoration:none;color:var(--bronz);font-size:28px;line-height:1}
+  .baslik{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--yazi);letter-spacing:1px}
+  .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:16px;padding:18px 18px;margin-bottom:16px}
+  .kart .etiket{font-size:13px;color:var(--muted);margin-bottom:8px;letter-spacing:.5px}
+  .kart input[type=text]{width:100%;background:#fffdf7;border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--yazi);font-family:'EB Garamond',serif;font-size:16px}
+  .kart input:focus{outline:none;border-color:var(--bronz)}
+  .satir{display:flex;justify-content:space-between;align-items:center}
+  .satir .ad{font-size:17px;color:var(--yazi)}
+  /* switch */
+  .switch{position:relative;width:52px;height:30px;flex-shrink:0}
+  .switch input{display:none}
+  .kaydir{position:absolute;inset:0;background:#d8c9ab;border-radius:30px;transition:.2s;cursor:pointer}
+  .kaydir::before{content:"";position:absolute;width:24px;height:24px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+  .switch input:checked + .kaydir{background:var(--bronz)}
+  .switch input:checked + .kaydir::before{transform:translateX(22px)}
+  .kaydet{width:100%;background:linear-gradient(180deg,#a97c46,#8a6435);color:var(--krem);border:none;border-radius:12px;padding:14px;font-family:'EB Garamond',serif;font-size:17px;cursor:pointer;margin-top:4px}
+  .kaydet:hover{filter:brightness(1.06)}
+  .hakkinda{font-size:15px;color:var(--muted);line-height:1.6;font-style:italic}
+  .surum{text-align:center;font-size:12px;color:var(--muted);margin-top:20px}
+  .bilgi{text-align:center;color:var(--yesil);font-size:14px;margin-top:10px;min-height:18px}
+</style>
+</head>
+<body>
+  <div class="ekran">
+    <div class="ust">
+      <a class="geri" href="menu.html">‹</a>
+      <div class="baslik">Ayarlar</div>
+    </div>
+
+    <div class="kart">
+      <div class="etiket">SENİN ADIN</div>
+      <input type="text" id="isim" placeholder="Adını yaz (Eskice sana böyle seslenir)">
+    </div>
+
+    <div class="kart">
+      <div class="satir">
+        <span class="ad">Sesli okuma</span>
+        <label class="switch"><input type="checkbox" id="ses"><span class="kaydir"></span></label>
+      </div>
+      <div class="etiket" style="margin-top:8px;margin-bottom:0">Eskice cevaplarını sesli okusun mu</div>
+    </div>
+
+    <button class="kaydet" id="kaydetBtn">Kaydet</button>
+    <div class="bilgi" id="bilgi"></div>
+
+    <div class="kart" style="margin-top:22px">
+      <div class="etiket">ESKİCE HAKKINDA</div>
+      <div class="hakkinda">Eskice, antikacının yol arkadaşıdır. Her eşyanın bir hikâyesi olduğuna inanır. Sana eserlerini değerlendirmekte, kayıt tutmakta ve doğru kararı vermekte yardım eder.</div>
+    </div>
+
+    <div class="surum">Eskice · sürüm 1.0</div>
+  </div>
+
+<script>
+  // kayıtlı ayarları yükle
+  const isimEl = document.getElementById('isim');
+  const sesEl = document.getElementById('ses');
+  isimEl.value = localStorage.getItem('eskice_isim') || '';
+  sesEl.checked = localStorage.getItem('eskice_ses') !== 'kapali'; // varsayılan açık
+
+  document.getElementById('kaydetBtn').onclick = ()=>{
+    localStorage.setItem('eskice_isim', isimEl.value.trim());
+    localStorage.setItem('eskice_ses', sesEl.checked ? 'acik' : 'kapali');
+    const b = document.getElementById('bilgi');
+    b.textContent = '✓ Kaydedildi';
+    setTimeout(()=> b.textContent='', 2000);
+  };
+</script>
+</body>
+</html>
