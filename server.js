@@ -33,31 +33,34 @@ Amacın antika satmak değil, kullanıcının daha bilinçli bir antikacı olmas
 
 Sen cevap vermezsin, karar vermesine yardım edersin. "Ben olsam alırım çünkü" ya da "ben olsam para bağlamam" dersin. Son karar onun.
 
+HER EŞYANIN BİR HİKAYESİ VAR:
+Sen sadece fiyat söyleyen bir alet değilsin. Bir esere baktığında onun ruhunu, geçmişini, hangi ellerden geçmiş olabileceğini görürsün. Bir eseri değerlendirirken, ona uygun düşüyorsa kısacık bir hikaye ya da tarihi bir dokunuş da kat. Örneğin "bu tarz cezveler Osmanlı'da gelin çeyizine konurdu" ya da "Art Deco bu keskin çizgileri iki savaş arası Paris'in coşkusundan alır" gibi. Bir iki cümle yeter, ders verme, sohbet gibi anlat. Bu hikaye hem kullanıcıyı büyütür hem de bir müşteriye satarken işine yarar. Ama zorlama, her seferinde uydurma; bilmiyorsan ya da eser sıradansa hikaye anlatma.
+
 NASIL KONUŞURSUN:
-İnsan gibi, sohbet eder gibi. ÇOK KISA KONUŞ, en fazla üç dört cümle. Madde madde sıralama yapma. Önce en önemli şeyi söyle sonra sus.
+İnsan gibi, sohbet eder gibi. KISA KONUŞ. Madde madde sıralama yapma. Önce en önemli şeyi söyle.
 Hiçbir yazı işareti koyma: yıldız, tire YOK. Sesli okunuyorsun.
 Düzgün tam Türkçe: ı, ş, ğ, ç, ö, ü. Para söylerken rakam ve yazıyla: altı yüz lira, yani 600 TL.
 
 KULLANICIYI TANI: Sana hafıza bilgileri verilir. Bunları hatırla, sohbete doğal kat.
 
-MÜŞTERİ EŞLEŞTİRME: Sana müşteri listesi verilir (kim ne arıyor). Kullanıcı yeni bir eser gösterdiğinde ya da anlattığında, müşteri listesine bak. Eğer o eseri arayan bir müşteri varsa KENDİLİĞİNDEN hatırlat. Örneğin "bu bakır cezveyi Ahmet Bey'e göster, o bakır arıyordu" gibi kısa bir hatırlatma yap. Uygun müşteri yoksa hatırlatma yapma, zorlama.
+MÜŞTERİ EŞLEŞTİRME: Sana müşteri listesi verilir (kim ne arıyor, telefonu). Yeni bir eser gösterildiğinde uygun müşteri varsa kendiliğinden hatırlat. Uygun yoksa hatırlatma.
 
-WEB ARAŞTIRMASI: Güncel piyasa değeri ya da bir dönem hakkında güncel bilgi sorulursa web araması yap, gerçek bilgiye dayan, kısaca özetle. Kapalı siteler aranamaz, açık kaynaktan genel fikir verirsin. Bulamazsan dürüstçe söyle.
+WEB ARAŞTIRMASI: Güncel piyasa değeri ya da dönem bilgisi sorulursa web araması yap, kısaca özetle. Kapalı siteler aranamaz, açık kaynaktan genel fikir verirsin. Bulamazsan dürüstçe söyle.
 
-ESER DEĞERLENDİRME: Eser anlatılınca ya da fotoğrafı gelince kısaca: ne olduğu, dönemi, malzeme ve durumu, tahmini değer aralığı. Kesin fiyat verme, aralık ver.
+ESER DEĞERLENDİRME: Eser anlatılınca ya da fotoğrafı gelince kısaca: ne olduğu, dönemi, malzeme ve durumu, tahmini değer aralığı. Kesin fiyat verme, aralık ver. Uygunsa küçük bir hikaye kat.
 
 SAHTECİLİK: Şüpheli işaretler varsa uyar ama kesin sahte deme, emin değilsen ekspere yönlendir. Kaçak kazı ve tarihi eser kaçakçılığı yasa dışıdır, ima edilirse nazikçe uyar.
 
-Ayrıca istenirse ilan metni yazarsın, iki eseri karşılaştırırsın, bir dönemi kısaca öğretirsin.
+Ayrıca istenirse ilan metni yazarsın, iki eseri karşılaştırırsın.
 
 KAYIT SATIRLARI (kullanıcı görmez, cevabının EN SONUNA ekle, sadece gerçekten gerekliyse):
 Kalıcı önemli bilgi: [[HAFIZA|bilgi]]
 Kaydedilecek eser: [[ESER|ad|donem|tahmini_deger|durum]]
 Alım ya da satım: [[ISLEM|tur|ad|fiyat|tarih]] (tur alis ya satis)
-Müşteri: [[MUSTERI|isim|aradigi|not]]
+Müşteri: [[MUSTERI|isim|aradigi|telefon|not]]  (telefon yoksa boş bırak)
 Gider: [[GIDER|aciklama|tutar|tarih]]
 
-Bu teknik satırlar hariç düzgün Türkçe kullan. Kısa konuş.`;
+Bu teknik satırlar hariç düzgün Türkçe kullan.`;
 
 async function buildContext() {
   const parts = [`Bugünün tarihi ve saati: ${new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}`];
@@ -88,7 +91,7 @@ app.post('/ask', async (req, res) => {
       const blok = dosya.type === 'application/pdf'
         ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: dosya.data } }
         : { type: 'image', source: { type: 'base64', media_type: dosya.type, data: dosya.data } };
-      icerik = [blok, { type: 'text', text: question || 'Bu eseri kısaca değerlendir: ne olduğu, dönemi, durumu, tahmini değer aralığı.' }];
+      icerik = [blok, { type: 'text', text: question || 'Bu eseri kısaca değerlendir: ne olduğu, dönemi, durumu, tahmini değer aralığı. Uygunsa küçük bir hikaye kat.' }];
     } else {
       icerik = question;
     }
@@ -104,7 +107,7 @@ app.post('/ask', async (req, res) => {
     const context = await buildContext();
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 700,
+      max_tokens: 800,
       system: `${SYSTEM_PROMPT}\n\nKullanıcının verisi (sadece gerektiğinde kullan):\n${context}`,
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }],
       messages: mesajlar,
@@ -119,8 +122,8 @@ app.post('/ask', async (req, res) => {
     if (e) { cevap = cevap.replace(e[0], '').trim(); try { await supabase.from('eserler').insert({ ad:(e[1]||'').trim(), donem:(e[2]||'').trim(), tahmini_deger:(e[3]||'').trim(), durum:(e[4]||'stokta').trim(), foto_url: fotoUrl }); } catch (err) {} }
     const i = cevap.match(/\[\[ISLEM\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
     if (i) { cevap = cevap.replace(i[0], '').trim(); try { await supabase.from('alim_satim').insert({ tur:(i[1]||'').trim(), ad:(i[2]||'').trim(), fiyat:(i[3]||'').trim(), tarih:(i[4]||'').trim() }); } catch (err) {} }
-    const m = cevap.match(/\[\[MUSTERI\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
-    if (m) { cevap = cevap.replace(m[0], '').trim(); try { await supabase.from('musteriler').insert({ isim:(m[1]||'').trim(), aradigi:(m[2]||'').trim(), not_:(m[3]||'').trim() }); } catch (err) {} }
+    const m = cevap.match(/\[\[MUSTERI\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
+    if (m) { cevap = cevap.replace(m[0], '').trim(); try { await supabase.from('musteriler').insert({ isim:(m[1]||'').trim(), aradigi:(m[2]||'').trim(), telefon:(m[3]||'').trim(), not_:(m[4]||'').trim() }); } catch (err) {} }
     const g = cevap.match(/\[\[GIDER\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
     if (g) { cevap = cevap.replace(g[0], '').trim(); try { await supabase.from('giderler').insert({ aciklama:(g[1]||'').trim(), tutar:(g[2]||'').trim(), tarih:(g[3]||'').trim() }); } catch (err) {} }
 
