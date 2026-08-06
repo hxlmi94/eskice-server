@@ -66,8 +66,8 @@
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 const supabase = createClient(
-  'https://SENIN-PROJEN.supabase.co',
-  'SENIN-PUBLISHABLE-ANAHTARIN'
+  'https://mepfyrnmscrqbzxlbjyf.supabase.co',
+  'sb_publishable_QE5BnaX_nvb36agQ0t0GNw_wkASsY06'
 );
 
 const para = (s)=>{ const n=parseFloat(String(s||'').replace(/[^\d.,-]/g,'').replace(',','.')); return isNaN(n)?0:n; };
@@ -80,33 +80,4 @@ async function yukle(){
   try{
     const [as, gd] = await Promise.all([
       supabase.from('alim_satim').select('*').order('created_at',{ascending:false}),
-      supabase.from('giderler').select('*').order('created_at',{ascending:false})
-    ]);
-    const islemler = as.data || [];
-    const giderler = gd.data || [];
-    let alim=0,satim=0,gider=0,aAlim=0,aSatim=0,aGider=0;
-    islemler.forEach(k=>{ const t=para(k.fiyat),bu=buAyMi(k.created_at); if((k.tur||'').includes('sat')){satim+=t; if(bu)aSatim+=t;} else {alim+=t; if(bu)aAlim+=t;} });
-    giderler.forEach(k=>{ const t=para(k.tutar),bu=buAyMi(k.created_at); gider+=t; if(bu)aGider+=t; });
-    document.getElementById('gelir').textContent=fmt(satim);
-    document.getElementById('gider').textContent=fmt(alim+gider);
-    document.getElementById('net').textContent=fmt(satim-alim-gider);
-    const now=new Date();
-    document.getElementById('aybaslik').textContent=AYLAR[now.getMonth()]+' '+now.getFullYear();
-    document.getElementById('ayNet').textContent=fmt(aSatim-aAlim-aGider);
-    document.getElementById('aySatis').textContent=fmt(aSatim);
-    document.getElementById('ayAlim').textContent=fmt(aAlim);
-    document.getElementById('ayGider').textContent=fmt(aGider);
-    document.getElementById('ayrapor').style.display='block';
-    const hepsi=[];
-    islemler.forEach(k=> hepsi.push({tip:(k.tur||'').includes('sat')?'satis':'alis',ad:k.ad,tutar:k.fiyat,tarih:k.tarih,t:k.created_at}));
-    giderler.forEach(k=> hepsi.push({tip:'gider',ad:k.aciklama,tutar:k.tutar,tarih:k.tarih,t:k.created_at}));
-    hepsi.sort((a,b)=> new Date(b.t||0)-new Date(a.t||0));
-    if(!hepsi.length){ liste.innerHTML='<div class="bos">Henüz hareket yok. Eskice ile konuşurken alım, satım ya da masraf söyle.</div>'; return; }
-    const ad={alis:'alış',satis:'satış',gider:'gider'};
-    liste.innerHTML=hepsi.map(k=>'<div class="satirk"><div><div class="ad">'+(k.ad||'-')+'<span class="rozet '+k.tip+'">'+ad[k.tip]+'</span></div><div class="tarih">'+(k.tarih||'')+'</div></div><div class="fiyat">'+(k.tutar||'')+'</div></div>').join('');
-  }catch(err){ liste.innerHTML='<div class="bos">Okunamadı: '+err.message+'</div>'; }
-}
-yukle();
-</script>
-</body>
-</html>
+      supabase.from('giderler').select('
