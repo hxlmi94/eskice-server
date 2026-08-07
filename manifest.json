@@ -1,0 +1,12 @@
+{
+  "name": "Eskice",
+  "short_name": "Eskice",
+  "start_url": "menu.html",
+  "display": "standalone",
+  "background_color": "#e7d4ab",
+  "theme_color": "#8a6435",
+  "icons": [
+    { "src": "ikon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "ikon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
