@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ajanda — Eskice</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#8a6435">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{--bronz:#8a6435;--bronz2:#6e5323;--yazi:#5f4623;--muted:#8a7a5f;--krem:#fbf5e9;--line:#d8c39c;--yesil:#5b7048}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'EB Garamond',serif;color:var(--yazi);min-height:100vh;display:flex;justify-content:center;background:#e7d4ab url('https://hxlmi94.github.io/eskice-server/sohbet.png') center/cover fixed no-repeat}
+  body::before{content:"";position:fixed;inset:0;background:rgba(242,233,210,.62);z-index:0}
+  .ekran{position:relative;z-index:1;width:100%;max-width:480px;min-height:100vh;padding:20px 22px 40px;background:rgba(247,240,224,.35);border-left:1px solid rgba(138,100,53,.18);border-right:1px solid rgba(138,100,53,.18)}
+  .ust{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .geri{text-decoration:none;color:var(--bronz);font-size:28px;line-height:1}
+  .baslik{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--yazi);letter-spacing:1px}
+  .bolum{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--bronz2);margin:20px 0 10px}
+  /* takvim */
+  .takvim{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:16px;padding:14px}
+  .takust{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .takust button{background:none;border:none;color:var(--bronz);font-size:22px;cursor:pointer;padding:0 8px}
+  .takay{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--yazi)}
+  .gunler,.tarihler{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+  .gunler span{font-size:11px;color:var(--muted);padding:4px 0}
+  .tarihler button{aspect-ratio:1;border:none;background:none;border-radius:9px;font-family:'EB Garamond',serif;font-size:14px;color:var(--yazi);cursor:pointer;position:relative}
+  .tarihler button:hover{background:rgba(138,100,53,.1)}
+  .tarihler button.bugun{border:1px solid var(--bronz)}
+  .tarihler button.secili{background:var(--bronz);color:var(--krem)}
+  .tarihler button.dolu::after{content:"";position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--yesil)}
+  .tarihler button.secili.dolu::after{background:var(--krem)}
+  .tarihler button.bos{visibility:hidden}
+  /* liste */
+  .ekleme{display:flex;gap:8px;margin-bottom:12px}
+  .ekleme input[type=text]{flex:1;background:#fffdf7;border:1px solid var(--line);border-radius:10px;padding:11px;color:var(--yazi);font-family:'EB Garamond',serif;font-size:15px}
+  .ekleme input[type=time]{width:96px;background:#fffdf7;border:1px solid var(--line);border-radius:10px;padding:11px 8px;color:var(--yazi);font-family:'EB Garamond',serif;font-size:15px}
+  .ekleme button{background:linear-gradient(180deg,#a97c46,#8a6435);color:var(--krem);border:none;border-radius:10px;padding:0 16px;font-size:22px;cursor:pointer}
+  .plan{display:flex;flex-direction:column;gap:8px}
+  .madde{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:12px}
+  .madde .saat{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--bronz2);min-width:52px}
+  .madde .metin{flex:1;font-size:15px}
+  .madde .alarm{background:none;border:none;cursor:pointer;font-size:17px;text-decoration:none}
+  .madde .sil{background:none;border:none;color:#b06a53;cursor:pointer;font-size:18px}
+  .bos{text-align:center;color:var(--muted);font-style:italic;padding:24px 12px;border:1px dashed var(--line);border-radius:12px}
+  .secgun{font-size:14px;color:var(--muted);font-style:italic;margin-bottom:10px}
+</style>
+</head>
+<body>
+  <div class="ekran">
+    <div class="ust">
+      <a class="geri" href="menu.html">‹</a>
+      <div class="baslik">Ajanda</div>
+    </div>
+
+    <div class="takvim">
+      <div class="takust">
+        <button id="oncekiAy">‹</button>
+        <div class="takay" id="takAy"></div>
+        <button id="sonrakiAy">›</button>
+      </div>
+      <div class="gunler"><span>Pt</span><span>Sa</span><span>Ça</span><span>Pe</span><span>Cu</span><span>Ct</span><span>Pz</span></div>
+      <div class="tarihler" id="tarihler"></div>
+    </div>
+
+    <div class="bolum" id="bolumBaslik">Bugünün Planı</div>
+    <div class="secgun" id="secgun"></div>
+
+    <div class="ekleme">
+      <input type="time" id="saat">
+      <input type="text" id="metin" placeholder="ne var? (ilaç, sanat saati...)">
+      <button id="ekleBtn">+</button>
+    </div>
+
+    <div class="plan" id="plan"></div>
+  </div>
+
+<script>
+  const AYLAR=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  let bugun=new Date();
+  let gosterilenAy=new Date(bugun.getFullYear(), bugun.getMonth(), 1);
+  let seciliTarih=tarihAnahtar(bugun);
+
+  function tarihAnahtar(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function veriAl(){ try{ return JSON.parse(localStorage.getItem('eskice_ajanda')||'{}'); }catch(e){ return {}; } }
+  function veriYaz(v){ localStorage.setItem('eskice_ajanda', JSON.stringify(v)); }
+
+  function takvimCiz(){
+    document.getElementById('takAy').textContent = AYLAR[gosterilenAy.getMonth()]+' '+gosterilenAy.getFullYear();
+    const ilkGun=new Date(gosterilenAy.getFullYear(),gosterilenAy.getMonth(),1);
+    let bosluk=(ilkGun.getDay()+6)%7; // pazartesi=0
+    const gunSayisi=new Date(gosterilenAy.getFullYear(),gosterilenAy.getMonth()+1,0).getDate();
+    const veri=veriAl();
+    let html='';
+    for(let i=0;i<bosluk;i++) html+='<button class="bos"></button>';
+    for(let g=1;g<=gunSayisi;g++){
+      const d=new Date(gosterilenAy.getFullYear(),gosterilenAy.getMonth(),g);
+      const anahtar=tarihAnahtar(d);
+      let sinif='';
+      if(anahtar===tarihAnahtar(bugun)) sinif+=' bugun';
+      if(anahtar===seciliTarih) sinif+=' secili';
+      if(veri[anahtar]&&veri[anahtar].length) sinif+=' dolu';
+      html+='<button class="'+sinif.trim()+'" data-t="'+anahtar+'">'+g+'</button>';
+    }
+    document.getElementById('tarihler').innerHTML=html;
+    document.querySelectorAll('.tarihler button[data-t]').forEach(b=>{
+      b.onclick=()=>{ seciliTarih=b.dataset.t; takvimCiz(); planCiz(); };
+    });
+  }
+
+  function planCiz(){
+    const veri=veriAl();
+    const liste=(veri[seciliTarih]||[]).slice().sort((a,b)=>(a.saat||'').localeCompare(b.saat||''));
+    const [y,m,g]=seciliTarih.split('-');
+    const bugunMu = seciliTarih===tarihAnahtar(bugun);
+    document.getElementById('bolumBaslik').textContent = bugunMu ? 'Bugünün Planı' : 'Plan';
+    document.getElementById('secgun').textContent = g+' '+AYLAR[parseInt(m)-1]+' '+y;
+    const el=document.getElementById('plan');
+    if(!liste.length){ el.innerHTML='<div class="bos">Bu güne henüz bir şey eklemedin.</div>'; return; }
+    el.innerHTML=liste.map((p,i)=>{
+      const takvimLink='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(p.metin)+'&dates='+takvimTarih(seciliTarih,p.saat);
+      return '<div class="madde"><span class="saat">'+(p.saat||'—')+'</span>'+
+        '<span class="metin">'+p.metin+'</span>'+
+        '<a class="alarm" href="'+takvimLink+'" target="_blank" title="Takvime ekle">⏰</a>'+
+        '<button class="sil" data-m="'+p.metin+'" data-s="'+(p.saat||'')+'">✕</button></div>';
+    }).join('');
+    el.querySelectorAll('.sil').forEach(b=>{
+      b.onclick=()=>{
+        const v=veriAl();
+        v[seciliTarih]=(v[seciliTarih]||[]).filter(x=>!(x.metin===b.dataset.m && (x.saat||'')===b.dataset.s));
+        if(!v[seciliTarih].length) delete v[seciliTarih];
+        veriYaz(v); takvimCiz(); planCiz();
+      };
+    });
+  }
+
+  function takvimTarih(tarih,saat){
+    const s=(saat||'09:00').replace(':','');
+    const gun=tarih.replace(/-/g,'');
+    const bas=gun+'T'+s+'00';
+    let sonSaat=String((parseInt((saat||'09:00').split(':')[0])+1)).padStart(2,'0');
+    const bit=gun+'T'+sonSaat+(saat||'09:00').split(':')[1]+'00';
+    return bas+'/'+bit;
+  }
+
+  document.getElementById('ekleBtn').onclick=()=>{
+    const metin=document.getElementById('metin').value.trim();
+    const saat=document.getElementById('saat').value;
+    if(!metin) return;
+    const v=veriAl();
+    if(!v[seciliTarih]) v[seciliTarih]=[];
+    v[seciliTarih].push({saat,metin});
+    veriYaz(v);
+    document.getElementById('metin').value=''; document.getElementById('saat').value='';
+    takvimCiz(); planCiz();
+  };
+  document.getElementById('metin').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('ekleBtn').click(); });
+
+  document.getElementById('oncekiAy').onclick=()=>{ gosterilenAy.setMonth(gosterilenAy.getMonth()-1); takvimCiz(); };
+  document.getElementById('sonrakiAy').onclick=()=>{ gosterilenAy.setMonth(gosterilenAy.getMonth()+1); takvimCiz(); };
+
+  takvimCiz(); planCiz();
+</script>
+</body>
+</html>
