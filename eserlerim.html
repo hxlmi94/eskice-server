@@ -11,10 +11,11 @@
   body{font-family:'EB Garamond',serif;color:var(--yazi);min-height:100vh;display:flex;justify-content:center;background:#e7d4ab url('https://hxlmi94.github.io/eskice-server/sohbet.png') center/cover fixed no-repeat}
   body::before{content:"";position:fixed;inset:0;background:rgba(242,233,210,.62);z-index:0}
   .ekran{position:relative;z-index:1;width:100%;max-width:480px;min-height:100vh;padding:20px 22px 40px;background:rgba(247,240,224,.35);border-left:1px solid rgba(138,100,53,.18);border-right:1px solid rgba(138,100,53,.18)}
-  .ust{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .ust{display:flex;align-items:center;gap:12px;margin-bottom:14px}
   .geri{text-decoration:none;color:var(--bronz);font-size:28px;line-height:1}
   .baslik{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--yazi);letter-spacing:1px}
-  .sayi{font-size:14px;color:var(--muted);font-style:italic;margin-bottom:18px;margin-left:40px}
+  .ekle{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:linear-gradient(160deg,#9a7238,#6e5323);color:var(--krem);border:none;border-radius:14px;padding:14px;font-family:'EB Garamond',serif;font-size:17px;cursor:pointer;margin-bottom:18px}
+  .sayi{font-size:14px;color:var(--muted);font-style:italic;margin-bottom:14px}
   .liste{display:flex;flex-direction:column;gap:12px}
   .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:14px;overflow:hidden;border-left:3px solid var(--bronz);display:flex;gap:12px}
   .kartfoto{width:92px;object-fit:cover;background:#e7dcc4;align-self:stretch}
@@ -27,11 +28,19 @@
   .durum{font-size:11px;padding:2px 10px;border-radius:20px}
   .durum.stokta{background:#e6efe0;color:var(--yesil)}
   .durum.satildi{background:#ece3d6;color:var(--muted)}
-  .durum.rezerve{background:#f3ead6;color:var(--bronz2)}
-  .satbtn{margin-top:10px;background:linear-gradient(180deg,#a97c46,#8a6435);color:var(--krem);border:none;border-radius:20px;padding:7px 18px;font-family:'EB Garamond',serif;font-size:14px;cursor:pointer}
-  .satili{margin-top:10px;font-size:13px;color:var(--muted);font-style:italic}
   .bos{text-align:center;color:var(--muted);font-style:italic;padding:40px 16px;border:1px dashed var(--line);border-radius:14px}
   .yukleniyor{text-align:center;color:var(--muted);padding:40px;font-style:italic}
+  /* pencere */
+  .perde{position:fixed;inset:0;background:rgba(50,35,15,.55);z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
+  .pencere{background:#f7f0e0;border-radius:18px;padding:22px;width:100%;max-width:400px;border:1px solid var(--line)}
+  .pencere h3{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--yazi);margin-bottom:14px;text-align:center}
+  .onizle{width:100%;max-height:220px;object-fit:contain;border-radius:12px;border:1px solid var(--line);margin-bottom:14px;display:none}
+  .pencere input{width:100%;background:#fffdf7;border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--yazi);font-family:'EB Garamond',serif;font-size:16px;margin-bottom:12px}
+  .pbtn{width:100%;border:none;border-radius:11px;padding:13px;font-family:'EB Garamond',serif;font-size:16px;cursor:pointer;margin-bottom:8px}
+  .pbtn.degerle{background:linear-gradient(180deg,#a97c46,#8a6435);color:var(--krem)}
+  .pbtn.hizli{background:rgba(138,100,53,.12);color:var(--bronz2);border:1px solid var(--line)}
+  .pbtn.kapat{background:none;color:var(--muted)}
+  .durumyazi{text-align:center;color:var(--bronz2);font-style:italic;font-size:14px;min-height:20px;margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -40,62 +49,118 @@
       <a class="geri" href="menu.html">‹</a>
       <div class="baslik">Eserlerim</div>
     </div>
+
+    <button class="ekle" id="ekleBtn">📷 Eser Ekle</button>
+    <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none">
+
     <div class="sayi" id="sayi"></div>
     <div class="liste" id="liste"><div class="yukleniyor">Yükleniyor...</div></div>
   </div>
 
+  <!-- Ekleme penceresi -->
+  <div class="perde" id="perde">
+    <div class="pencere">
+      <h3>Yeni Eser</h3>
+      <img class="onizle" id="onizle">
+      <input type="text" id="eserAd" placeholder="Eserin adı (örn: bakır cezve)">
+      <div class="durumyazi" id="durumyazi"></div>
+      <button class="pbtn degerle" id="degerleBtn">Eskice değerlendirsin</button>
+      <button class="pbtn hizli" id="hizliBtn">Hızlı kaydet</button>
+      <button class="pbtn kapat" id="kapatBtn">Vazgeç</button>
+    </div>
+  </div>
+
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const SERVER = 'https://eskice-server.onrender.com';
 const supabase = createClient(
   'https://mepfyrnmscrqbzxlbjyf.supabase.co',
   'sb_publishable_QE5BnaX_nvb36agQ0t0GNw_wkASsY06'
 );
 
-let eserler = [];
+let seciliFoto = null; // {data, type, url}
 
 async function yukle(){
   const liste = document.getElementById('liste');
   try{
     const { data, error } = await supabase.from('eserler').select('*').order('created_at',{ascending:false});
     if(error) throw error;
-    eserler = data || [];
-    if(!eserler.length){
-      liste.innerHTML='<div class="bos">Henüz eser yok. Eskice ile konuşurken bir eseri kaydettiğinde buraya düşer.</div>';
+    if(!data || !data.length){
+      liste.innerHTML='<div class="bos">Henüz eser yok. Üstteki Eser Ekle ile fotoğraf çekip kaydedebilirsin.</div>';
       document.getElementById('sayi').textContent=''; return;
     }
-    document.getElementById('sayi').textContent = eserler.length + ' eser';
-    liste.innerHTML = eserler.map(e=>{
-      const bilgi = [e.donem, e.malzeme].filter(Boolean).join(' · ');
+    document.getElementById('sayi').textContent = data.length + ' eser';
+    liste.innerHTML = data.map(e=>{
+      const bilgi = [e.donem].filter(Boolean).join(' · ');
       const durum = (e.durum||'stokta').toLowerCase();
-      const foto = e.foto_url ? '<img class="kartfoto" src="'+e.foto_url+'" alt="">' : '<div class="kartfoto yok">🏺</div>';
-      const satildi = durum==='satildi';
-      const btn = satildi
-        ? '<div class="satili">✓ satıldı'+(e.satis_fiyati?' — '+e.satis_fiyati:'')+'</div>'
-        : '<button class="satbtn" onclick="window.sat(\''+e.id+'\')">Sat</button>';
+      const foto = e.foto_url ? '<img class="kartfoto" src="'+e.foto_url+'">' : '<div class="kartfoto yok">🏺</div>';
       return '<div class="kart">'+foto+'<div class="kartic"><div class="ad">'+(e.ad||'-')+'</div>'+
         (bilgi?'<div class="bilgi">'+bilgi+'</div>':'')+
-        '<div class="alt"><span class="deger">'+(e.tahmini_deger||'değer belirsiz')+'</span>'+
-        '<span class="durum '+durum+'">'+durum+'</span></div>'+btn+'</div></div>';
+        '<div class="alt"><span class="deger">'+(e.tahmini_deger||'')+'</span>'+
+        '<span class="durum '+durum+'">'+durum+'</span></div></div></div>';
     }).join('');
-  }catch(err){
-    liste.innerHTML='<div class="bos">Okunamadı: '+err.message+'</div>';
-  }
+  }catch(err){ liste.innerHTML='<div class="bos">Okunamadı: '+err.message+'</div>'; }
 }
 
-window.sat = async (id)=>{
-  const eser = eserler.find(e=> String(e.id)===String(id));
-  if(!eser) return;
-  const fiyat = prompt('"'+eser.ad+'" kaça satıldı? (sadece rakam yaz)');
-  if(fiyat===null) return;
-  const temiz = fiyat.trim();
+// Kamera / galeri aç
+document.getElementById('ekleBtn').onclick = ()=> document.getElementById('fotoInput').click();
+document.getElementById('fotoInput').onchange = (ev)=>{
+  const f = ev.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    seciliFoto = { data: r.result.split(',')[1], type: f.type, url: r.result };
+    document.getElementById('onizle').src = r.result;
+    document.getElementById('onizle').style.display = 'block';
+    document.getElementById('eserAd').value = '';
+    document.getElementById('durumyazi').textContent = '';
+    document.getElementById('perde').style.display = 'flex';
+  };
+  r.readAsDataURL(f);
+};
+
+document.getElementById('kapatBtn').onclick = ()=>{
+  document.getElementById('perde').style.display='none'; seciliFoto=null;
+};
+
+// Fotoğrafı Storage'a yükle, public url dön
+async function fotoYukleStorage(){
   try{
-    await supabase.from('eserler').update({ durum:'satildi', satis_fiyati: temiz }).eq('id', id);
-    const bugun = new Date().toLocaleDateString('tr-TR');
-    await supabase.from('alim_satim').insert({ tur:'satis', ad: eser.ad, fiyat: temiz+' TL', tarih: bugun });
-    yukle();
-  }catch(err){
-    alert('Olmadı: '+err.message);
-  }
+    const ad = 'eser_'+Date.now()+'.'+((seciliFoto.type||'').includes('png')?'png':'jpg');
+    const buf = Uint8Array.from(atob(seciliFoto.data), c=>c.charCodeAt(0));
+    const { error } = await supabase.storage.from('fotograflar').upload(ad, buf, { contentType: seciliFoto.type||'image/jpeg' });
+    if(error) return null;
+    return 'https://mepfyrnmscrqbzxlbjyf.supabase.co/storage/v1/object/public/fotograflar/'+ad;
+  }catch(e){ return null; }
+}
+
+// Hızlı kaydet: sadece isim + foto
+document.getElementById('hizliBtn').onclick = async ()=>{
+  const ad = document.getElementById('eserAd').value.trim();
+  if(!ad){ document.getElementById('durumyazi').textContent='Önce bir isim yaz'; return; }
+  document.getElementById('durumyazi').textContent='Kaydediliyor...';
+  const foto_url = await fotoYukleStorage();
+  try{
+    await supabase.from('eserler').insert({ ad, durum:'stokta', foto_url });
+    document.getElementById('perde').style.display='none'; seciliFoto=null; yukle();
+  }catch(err){ document.getElementById('durumyazi').textContent='Olmadı: '+err.message; }
+};
+
+// Eskice değerlendirsin: fotoyu sunucuya gönder, o değerlendirip kaydetsin
+document.getElementById('degerleBtn').onclick = async ()=>{
+  if(!seciliFoto){ return; }
+  document.getElementById('durumyazi').textContent='Eskice bakıyor...';
+  try{
+    const r = await fetch(SERVER+'/ask', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        question: 'Bu eseri değerlendir ve mutlaka kaydet. Kısaca ne olduğu, dönemi ve tahmini değerini söyle.',
+        dosya: { data: seciliFoto.data, type: seciliFoto.type }
+      })
+    });
+    const j = await r.json();
+    document.getElementById('durumyazi').textContent = j.answer ? 'Eklendi ✓' : 'Bir sorun oldu';
+    setTimeout(()=>{ document.getElementById('perde').style.display='none'; seciliFoto=null; yukle(); }, 1200);
+  }catch(err){ document.getElementById('durumyazi').textContent='Bağlanamadı, tekrar dene'; }
 };
 
 yukle();
