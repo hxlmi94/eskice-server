@@ -27,6 +27,8 @@ async function fotoYukle(base64, tip) {
   } catch (e) { return null; }
 }
 
+function sayi(x){ if(x===undefined||x===null) return null; const n=parseFloat(String(x).replace(',','.').replace(/[^\d.]/g,'')); return isNaN(n)?null:n; }
+
 const SYSTEM_PROMPT = `Sen Eskice'sin. Bir antikacının ve sanatçının yol arkadaşısın. Ona adıyla seslenirsin.
 
 Amacın onun daha bilinçli olmasına yardım etmek. Sakin, mütevazı, dürüst, sabırlı, esprili bir kişiliğin var. Sıcak ve sohbet edersin, kuru cevap vermezsin, arada ona da bir şey sorarsın ama gevezelik etmezsin.
@@ -44,7 +46,7 @@ ANTİKA DEĞERLEME: Eser anlatılınca ya da fotoğrafı gelince kısaca ne oldu
 MÜŞTERİ EŞLEŞTİRME: Yeni eser gösterildiğinde onu arayan müşteri varsa kendiliğinden hatırlat.
 
 ATÖLYE - KENDİ ÜRETİMLERİ (mozaik, çanta gibi):
-Kullanıcı kendi yaptığı bir işi anlatırsa (yapıyorum, ürettim, tamamladım gibi), bunu bir atölye işi olarak kaydet. Malzeme maliyetlerini toplarsan söyle. Fiyat sorulursa: malzeme maliyeti ve emeği üstünden mantıklı bir satış fiyatı aralığı öner, "ben olsam şu bandta satarım çünkü" de. Nerede satabileceğini sorarsa GERÇEK ve somut yerler söyle: Etsy, Instagram üzerinden satış, yerel el sanatları ve tasarım pazarları, butik hediyelik dükkanları, zanaat fuarları gibi. Uydurma bir alıcı ya da "şu kişi alır" deme, sadece gerçek satış kanallarını söyle. İstenirse güncel piyasa için web araması yapabilirsin. Sattığında kârını hesapla (satış eksi malzeme). Nasıl ilerleyeceğini sorarsa dürüst, uygulanabilir tavsiye ver.
+Kullanıcı kendi yaptığı bir işi anlatırsa bunu atölye işi olarak kaydet. Malzeme maliyetlerini toplayıp söyle. Fiyat sorulursa malzeme ve emek üstünden mantıklı bir satış fiyatı aralığı öner. Nerede satabileceğini sorarsa GERÇEK ve somut yerler söyle: Etsy, Instagram üzerinden satış, yerel el sanatları ve tasarım pazarları, butik hediyelik dükkanları, zanaat fuarları. Uydurma alıcı deme, sadece gerçek satış kanalları. Sattığında kârını hesapla. Nasıl ilerleyeceğini sorarsa dürüst, uygulanabilir tavsiye ver.
 
 WEB ARAŞTIRMASI: Sadece kullanıcı açıkça güncel fiyat/piyasa/araştır derse yap, yoksa arama.
 
@@ -54,9 +56,8 @@ Antika eser: [[ESER|ad|donem|tahmini_deger|durum]]
 Alım/satım: [[ISLEM|tur|ad|fiyat|tarih]]
 Müşteri: [[MUSTERI|isim|aradigi|telefon|not]]
 Gider: [[GIDER|aciklama|tutar|tarih]]
-Atölye işi (kendi ürettiği): [[ATOLYE|ad|tur|malzeme_maliyeti|emek_saati|onerilen_fiyat|durum]]
-  (tur: mozaik, çanta gibi. durum: yapiliyor, hazir, satildi. Bilinmeyen sayısal alanı boş bırak.)
-Atölye satışı olduysa: [[ATOLYESAT|ad|satis_fiyati]]
+Atölye işi: [[ATOLYE|ad|tur|malzeme_maliyeti|emek_saati|onerilen_fiyat|durum]]
+Atölye satışı: [[ATOLYESAT|ad|satis_fiyati]]
 
 Bu teknik satırlar hariç düzgün Türkçe kullan.`;
 
@@ -73,7 +74,18 @@ async function buildContext() {
   return parts.join('\n\n');
 }
 
-function sayi(x){ if(x===undefined||x===null) return null; const n=parseFloat(String(x).replace(',','.').replace(/[^\d.]/g,'')); return isNaN(n)?null:n; }
+app.post('/atolye-ekle', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const { error } = await supabase.from('atolye').insert({
+      ad:(b.ad||'').trim(), tur:(b.tur||'').trim(),
+      malzeme_maliyeti: Number(b.malzeme_maliyeti)||0, emek_saati: Number(b.emek_saati)||0,
+      durum:(b.durum||'yapiliyor').trim(), foto_url: b.foto_url||null
+    });
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
 
 app.post('/ask', async (req, res) => {
   try {
@@ -126,7 +138,6 @@ app.post('/ask', async (req, res) => {
     const g = cevap.match(/\[\[GIDER\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
     if (g) { cevap = cevap.replace(g[0], '').trim(); try { await supabase.from('giderler').insert({ aciklama:(g[1]||'').trim(), tutar:(g[2]||'').trim(), tarih:(g[3]||'').trim() }); } catch (err) {} }
 
-    // ATÖLYE kaydı
     const a = cevap.match(/\[\[ATOLYE\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
     if (a) {
       cevap = cevap.replace(a[0], '').trim();
@@ -138,16 +149,13 @@ app.post('/ask', async (req, res) => {
         });
       } catch (err) {}
     }
-    // ATÖLYE satışı
-    const as = cevap.match(/\[\[ATOLYESAT\|([^|]*)\|([^\]]*)\]\]/);
-    if (as) {
-      cevap = cevap.replace(as[0], '').trim();
+    const asat = cevap.match(/\[\[ATOLYESAT\|([^|]*)\|([^\]]*)\]\]/);
+    if (asat) {
+      cevap = cevap.replace(asat[0], '').trim();
       try {
-        const ad=(as[1]||'').trim(); const fy=sayi(as[2]);
+        const ad=(asat[1]||'').trim(); const fy=sayi(asat[2]);
         const { data: bul } = await supabase.from('atolye').select('*').ilike('ad','%'+ad+'%').limit(1);
-        if (bul && bul.length) {
-          await supabase.from('atolye').update({ durum:'satildi', satis_fiyati: fy }).eq('id', bul[0].id);
-        }
+        if (bul && bul.length) await supabase.from('atolye').update({ durum:'satildi', satis_fiyati: fy }).eq('id', bul[0].id);
       } catch (err) {}
     }
 
