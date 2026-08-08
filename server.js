@@ -52,6 +52,8 @@ BORÇ ALACAK: Kullanıcı birinin ona borçlu olduğunu ya da kendisinin birine 
 
 WEB ARAŞTIRMASI: Sadece kullanıcı açıkça güncel fiyat/piyasa/araştır derse yap.
 
+ÖNEMLİ: Bir eseri değerlendirdiğinde onu SADECE BİR KERE kaydet. Aynı eser için tek bir [[ESER]] satırı ekle, tekrar etme.
+
 KAYIT SATIRLARI — ÖNEMLİ: Cevabının EN SONUNA ilgili satırı MUTLAKA ekle. Kullanıcı bunu görmez.
 Kalıcı bilgi: [[HAFIZA|bilgi]]
 Antika eser: [[ESER|ad|donem|tahmini_deger|durum]]
@@ -95,6 +97,29 @@ app.post('/eser-sat', async (req, res) => {
     await supabase.from('eserler').update({ durum:'satildi', satis_fiyati: b.fiyat }).eq('id', b.id);
     const bugun = new Date().toLocaleDateString('tr-TR');
     await supabase.from('alim_satim').insert({ tur:'satis', ad:(b.ad||'').trim(), fiyat:(fy!=null?fy:0)+' TL', tarih: bugun });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/eser-guncelle', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const alan = {};
+    if (b.ad!==undefined) alan.ad=(b.ad||'').trim();
+    if (b.donem!==undefined) alan.donem=(b.donem||'').trim();
+    if (b.tahmini_deger!==undefined) alan.tahmini_deger=(b.tahmini_deger||'').trim();
+    if (b.durum!==undefined) alan.durum=(b.durum||'stokta').trim();
+    const { error } = await supabase.from('eserler').update(alan).eq('id', b.id);
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/eser-sil', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const { error } = await supabase.from('eserler').delete().eq('id', b.id);
+    if (error) return res.status(500).json({ error: error.message });
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
