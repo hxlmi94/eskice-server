@@ -34,8 +34,23 @@
   .durumr.yapiliyor{background:#efe6d4;color:var(--bronz2)}
   .durumr.hazir{background:#e6e0ef;color:var(--mor)}
   .durumr.satildi{background:#e6efe0;color:var(--yesil)}
+  .satBtn{margin-top:8px;margin-left:8px;background:rgba(122,92,138,.14);color:var(--mor);border:1px solid #d8cbe2;border-radius:20px;padding:3px 12px;font-family:'EB Garamond',serif;font-size:12px;cursor:pointer}
   .bos{text-align:center;color:var(--muted);font-style:italic;padding:40px 16px;border:1px dashed var(--line);border-radius:14px}
   .yukleniyor{text-align:center;color:var(--muted);padding:40px;font-style:italic}
+  /* pencere */
+  .perde{position:fixed;inset:0;background:rgba(50,35,15,.55);z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
+  .pencere{background:#f7f0e0;border-radius:18px;padding:22px;width:100%;max-width:400px;border:1px solid var(--line);max-height:92vh;overflow-y:auto}
+  .pencere h3{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--yazi);margin-bottom:14px;text-align:center}
+  .onizle{width:100%;max-height:200px;object-fit:contain;border-radius:12px;border:1px solid var(--line);margin-bottom:12px;display:none}
+  .fotosec{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:rgba(138,100,53,.1);color:var(--bronz2);border:1px dashed var(--line);border-radius:10px;padding:12px;font-family:'EB Garamond',serif;font-size:15px;cursor:pointer;margin-bottom:12px}
+  .pencere label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;letter-spacing:.3px}
+  .pencere input,.pencere select{width:100%;background:#fffdf7;border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--yazi);font-family:'EB Garamond',serif;font-size:16px;margin-bottom:12px}
+  .ikili{display:flex;gap:10px}
+  .ikili>div{flex:1}
+  .pbtn{width:100%;border:none;border-radius:11px;padding:13px;font-family:'EB Garamond',serif;font-size:16px;cursor:pointer;margin-bottom:8px}
+  .pbtn.kaydet{background:linear-gradient(180deg,#a97c46,#8a6435);color:var(--krem)}
+  .pbtn.kapat{background:none;color:var(--muted)}
+  .durumyazi{text-align:center;color:var(--bronz2);font-style:italic;font-size:14px;min-height:20px;margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -52,66 +67,151 @@
     </div>
 
     <button class="ekle" id="ekleBtn">🎨 Yeni İş Ekle</button>
-    <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none">
 
     <div class="liste" id="liste"><div class="yukleniyor">Yükleniyor...</div></div>
   </div>
 
+  <!-- Ekleme penceresi -->
+  <div class="perde" id="perde">
+    <div class="pencere">
+      <h3>Yeni İş</h3>
+      <img class="onizle" id="onizle">
+      <button class="fotosec" id="fotosecBtn">📷 Fotoğraf ekle</button>
+      <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none">
+
+      <label>Ne yaptın?</label>
+      <input type="text" id="fAd" placeholder="örn: Akdeniz mavisi mozaik tabak">
+
+      <label>Türü</label>
+      <input type="text" id="fTur" placeholder="mozaik, çanta...">
+
+      <div class="ikili">
+        <div><label>Malzeme (TL)</label><input type="number" id="fMaliyet" placeholder="0"></div>
+        <div><label>Emek (saat)</label><input type="number" id="fSaat" placeholder="0"></div>
+      </div>
+
+      <label>Durum</label>
+      <select id="fDurum">
+        <option value="yapiliyor">Yapılıyor</option>
+        <option value="hazir">Hazır</option>
+        <option value="satildi">Satıldı</option>
+      </select>
+
+      <div class="durumyazi" id="durumyazi"></div>
+      <button class="pbtn kaydet" id="kaydetBtn">Kaydet</button>
+      <button class="pbtn kapat" id="kapatBtn">Vazgeç</button>
+    </div>
+  </div>
+
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const SERVER='https://eskice-server.onrender.com';
 const supabase = createClient(
   'https://mepfyrnmscrqbzxlbjyf.supabase.co',
   'sb_publishable_QE5BnaX_nvb36agQ0t0GNw_wkASsY06'
 );
 const fmt = (n)=> (Number(n)||0).toLocaleString('tr-TR')+' TL';
+let seciliFoto=null, isler=[];
 
 async function yukle(){
-  const liste = document.getElementById('liste');
+  const liste=document.getElementById('liste');
   try{
     const { data, error } = await supabase.from('atolye').select('*').order('created_at',{ascending:false});
     if(error) throw error;
-    const isler = data || [];
+    isler = data || [];
     if(!isler.length){
-      liste.innerHTML='<div class="bos">Henüz iş yok. Üstteki Yeni İş Ekle ile başladığın bir mozaik, çanta ya da başka çalışmanı ekle.</div>';
-      return;
+      liste.innerHTML='<div class="bos">Henüz iş yok. Yeni İş Ekle ile başladığın çalışmayı ekle.</div>';
+      document.getElementById('ozet').style.display='none'; return;
     }
-    // özet
-    let toplamMaliyet=0, toplamKar=0;
-    isler.forEach(i=>{
-      toplamMaliyet += Number(i.malzeme_maliyeti)||0;
-      if((i.durum||'')==='satildi' && i.satis_fiyati){
-        toplamKar += (Number(i.satis_fiyati)||0) - (Number(i.malzeme_maliyeti)||0);
-      }
-    });
-    document.getElementById('oIs').textContent = isler.length;
-    document.getElementById('oMaliyet').textContent = fmt(toplamMaliyet);
-    document.getElementById('oKar').textContent = fmt(toplamKar);
+    let tMaliyet=0,tKar=0;
+    isler.forEach(i=>{ tMaliyet+=Number(i.malzeme_maliyeti)||0; if((i.durum||'')==='satildi'&&i.satis_fiyati) tKar+=(Number(i.satis_fiyati)||0)-(Number(i.malzeme_maliyeti)||0); });
+    document.getElementById('oIs').textContent=isler.length;
+    document.getElementById('oMaliyet').textContent=fmt(tMaliyet);
+    document.getElementById('oKar').textContent=fmt(tKar);
     document.getElementById('ozet').style.display='flex';
 
-    liste.innerHTML = isler.map(i=>{
+    const durumAd={yapiliyor:'yapılıyor',hazir:'hazır',satildi:'satıldı'};
+    liste.innerHTML=isler.map(i=>{
       const durum=(i.durum||'yapiliyor').toLowerCase();
-      const foto = i.foto_url ? '<img class="kartfoto" src="'+i.foto_url+'">' : '<div class="kartfoto yok">🎨</div>';
+      const foto=i.foto_url?'<img class="kartfoto" src="'+i.foto_url+'">':'<div class="kartfoto yok">🎨</div>';
       let fiyatSatir='';
-      if(durum==='satildi' && i.satis_fiyati){
+      if(durum==='satildi'&&i.satis_fiyati){
         const kar=(Number(i.satis_fiyati)||0)-(Number(i.malzeme_maliyeti)||0);
         fiyatSatir='<div class="satir"><span>Satıldı: <b>'+fmt(i.satis_fiyati)+'</b></span><span class="kar">kâr '+fmt(kar)+'</span></div>';
       } else if(i.onerilen_fiyat){
         fiyatSatir='<div class="satir"><span>Önerilen: <b>'+fmt(i.onerilen_fiyat)+'</b></span></div>';
       }
-      const durumAd={yapiliyor:'yapılıyor',hazir:'hazır',satildi:'satıldı'};
+      const satBtn = durum!=='satildi' ? '<button class="satBtn" data-id="'+i.id+'" data-ad="'+(i.ad||'')+'">Sattım</button>' : '';
       return '<div class="kart">'+foto+'<div class="kartic">'+
         '<div class="ad">'+(i.ad||'-')+'</div>'+
         (i.tur?'<div class="tur">'+i.tur+'</div>':'')+
         '<div class="satir"><span>Malzeme: <b>'+fmt(i.malzeme_maliyeti)+'</b></span>'+(i.emek_saati?'<span>'+i.emek_saati+' saat</span>':'')+'</div>'+
         fiyatSatir+
-        '<span class="durumr '+durum+'">'+(durumAd[durum]||durum)+'</span>'+
+        '<span class="durumr '+durum+'">'+(durumAd[durum]||durum)+'</span>'+satBtn+
         '</div></div>';
     }).join('');
+
+    liste.querySelectorAll('.satBtn').forEach(b=>{
+      b.onclick=async ()=>{
+        const fy=prompt('"'+b.dataset.ad+'" kaça satıldı? (sadece rakam)');
+        if(fy===null) return;
+        const n=parseFloat(String(fy).replace(',','.').replace(/[^\d.]/g,''));
+        try{ await supabase.from('atolye').update({durum:'satildi',satis_fiyati:isNaN(n)?null:n}).eq('id',b.dataset.id); yukle(); }
+        catch(e){ alert('Olmadı'); }
+      };
+    });
   }catch(err){ liste.innerHTML='<div class="bos">Okunamadı: '+err.message+'</div>'; }
 }
 
-// Şimdilik ekleme butonu kamerayı açar (kayıt akışını sonraki adımda bağlayacağız)
-document.getElementById('ekleBtn').onclick = ()=> alert('Yeni iş ekleme birazdan bağlanacak. Şimdilik Eskice ile konuşarak da iş ekleyebilirsin.');
+// pencere aç/kapa
+document.getElementById('ekleBtn').onclick=()=>{
+  seciliFoto=null;
+  document.getElementById('onizle').style.display='none';
+  ['fAd','fTur','fMaliyet','fSaat'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fDurum').value='yapiliyor';
+  document.getElementById('durumyazi').textContent='';
+  document.getElementById('perde').style.display='flex';
+};
+document.getElementById('kapatBtn').onclick=()=>{ document.getElementById('perde').style.display='none'; };
+
+document.getElementById('fotosecBtn').onclick=()=>document.getElementById('fotoInput').click();
+document.getElementById('fotoInput').onchange=(ev)=>{
+  const f=ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ seciliFoto={data:r.result.split(',')[1],type:f.type};
+    document.getElementById('onizle').src=r.result; document.getElementById('onizle').style.display='block'; };
+  r.readAsDataURL(f);
+};
+
+async function fotoYukleStorage(){
+  if(!seciliFoto) return null;
+  try{
+    const ad='eser_'+Date.now()+'.'+((seciliFoto.type||'').includes('png')?'png':'jpg');
+    const buf=Uint8Array.from(atob(seciliFoto.data),c=>c.charCodeAt(0));
+    const { error } = await supabase.storage.from('fotograflar').upload(ad,buf,{contentType:seciliFoto.type||'image/jpeg'});
+    if(error) return null;
+    return 'https://mepfyrnmscrqbzxlbjyf.supabase.co/storage/v1/object/public/fotograflar/'+ad;
+  }catch(e){ return null; }
+}
+
+document.getElementById('kaydetBtn').onclick=async ()=>{
+  const ad=document.getElementById('fAd').value.trim();
+  if(!ad){ document.getElementById('durumyazi').textContent='Önce ne yaptığını yaz'; return; }
+  document.getElementById('durumyazi').textContent='Kaydediliyor...';
+  const foto_url=await fotoYukleStorage();
+  const maliyet=parseFloat(document.getElementById('fMaliyet').value)||0;
+  const saat=parseFloat(document.getElementById('fSaat').value)||0;
+  const durum=document.getElementById('fDurum').value;
+  const tur=document.getElementById('fTur').value.trim();
+  try{
+    // yazma sunucu üstünden değil; atolye tablosuna doğrudan yazım RLS ile kapalı olabilir,
+    // o yüzden sunucudaki /atolye-ekle ucunu kullanıyoruz
+    const r=await fetch(SERVER+'/atolye-ekle',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ad,tur,malzeme_maliyeti:maliyet,emek_saati:saat,durum,foto_url})});
+    if(!r.ok) throw new Error('sunucu');
+    document.getElementById('perde').style.display='none'; yukle();
+  }catch(err){ document.getElementById('durumyazi').textContent='Olmadı, tekrar dene'; }
+};
 
 yukle();
 </script>
