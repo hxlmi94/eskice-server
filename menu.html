@@ -22,7 +22,14 @@
   .susleme .cizgi{height:1px;width:56px;background:linear-gradient(90deg,transparent,var(--altin))}
   .susleme .cizgi.sag{background:linear-gradient(90deg,var(--altin),transparent)}
   .susleme svg{width:15px;height:15px}
-  .selam{text-align:center;font-size:16px;color:#6e5836;font-style:italic;margin:6px 0 26px}
+  .selam{text-align:center;font-size:16px;color:#6e5836;font-style:italic;margin:6px 0 16px}
+  .gunun{background:rgba(251,245,233,.9);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:22px;border-left:3px solid var(--altin)}
+  .gunun .satir{display:flex;gap:9px;align-items:flex-start;font-size:14px;line-height:1.5}
+  .gunun .satir+.satir{margin-top:9px;padding-top:9px;border-top:1px solid rgba(138,100,53,.15)}
+  .gunun .ikon{font-size:15px;flex-shrink:0;margin-top:1px}
+  .gunun .yazi{color:var(--yazi)}
+  .gunun .yazi b{color:var(--bronz);font-weight:500}
+  .gunun.yukleniyor{color:var(--muted);font-style:italic;text-align:center;font-size:14px}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:16px;padding:22px 12px;display:flex;flex-direction:column;align-items:center;gap:11px;cursor:pointer;text-decoration:none;box-shadow:0 1px 3px rgba(90,70,40,.1);transition:transform .15s,box-shadow .15s,background .15s}
   .kart:hover{transform:translateY(-3px);background:rgba(253,248,238,.97);box-shadow:0 8px 20px rgba(110,83,35,.18)}
@@ -50,7 +57,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3 l2 7 7 2 -7 2 -2 7 -2 -7 -7 -2 7 -2z"/></svg>
       <span class="cizgi sag"></span>
     </div>
-    <div class="selam">Hoş geldin Aylin. Ne yapalım bugün?</div>
+    <div class="selam" id="selam">Hoş geldin. Ne yapalım bugün?</div>
+
+    <div class="gunun yukleniyor" id="gunun">Eskice günün notunu hazırlıyor...</div>
+
     <div class="grid">
       <a class="kart sohbet" href="index.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M6 11 a6 6 0 0 0 12 0"/><path d="M12 17 v4 M8 21 h8"/></svg>
@@ -90,5 +100,25 @@
       </a>
     </div>
   </div>
+
+<script>
+const SERVER='https://eskice-server.onrender.com';
+const ad=(localStorage.getItem('eskice_isim')||'').trim();
+document.getElementById('selam').textContent = ad ? ('Hoş geldin '+ad+'. Ne yapalım bugün?') : 'Hoş geldin. Ne yapalım bugün?';
+
+(async ()=>{
+  const el=document.getElementById('gunun');
+  try{
+    const r=await fetch(SERVER+'/gunun',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kullaniciAdi:ad})});
+    const j=await r.json();
+    if(j.oneri||j.bilgi){
+      el.classList.remove('yukleniyor');
+      el.innerHTML =
+        (j.oneri?'<div class="satir"><span class="ikon">🌿</span><span class="yazi"><b>Bugün:</b> '+j.oneri+'</span></div>':'')+
+        (j.bilgi?'<div class="satir"><span class="ikon">📜</span><span class="yazi"><b>Günün bilgisi:</b> '+j.bilgi+'</span></div>':'');
+    } else { el.textContent='Bugün için bir not çıkmadı.'; }
+  }catch(e){ el.classList.remove('yukleniyor'); el.style.display='none'; }
+})();
+</script>
 </body>
 </html>
