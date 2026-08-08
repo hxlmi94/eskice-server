@@ -77,6 +77,28 @@ async function buildContext() {
   return parts.join('\n\n');
 }
 
+app.post('/eser-ekle', async (req, res) => {
+  try {
+    const b = req.body || {};
+    let fotoUrl = null;
+    if (b.foto && b.foto.data) fotoUrl = await fotoYukle(b.foto.data, b.foto.type);
+    const { error } = await supabase.from('eserler').insert({ ad:(b.ad||'').trim(), durum:'stokta', foto_url: fotoUrl });
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/eser-sat', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const fy = sayi(b.fiyat);
+    await supabase.from('eserler').update({ durum:'satildi', satis_fiyati: b.fiyat }).eq('id', b.id);
+    const bugun = new Date().toLocaleDateString('tr-TR');
+    await supabase.from('alim_satim').insert({ tur:'satis', ad:(b.ad||'').trim(), fiyat:(fy!=null?fy:0)+' TL', tarih: bugun });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.post('/atolye-ekle', async (req, res) => {
   try {
     const b = req.body || {};
@@ -110,7 +132,7 @@ app.post('/gunun', async (req, res) => {
       model: 'claude-sonnet-4-6',
       max_tokens: 320,
       system: `Sen Eskice'sin, antikacı ve sanatçı ${ad||'kullanıcının'} yol arkadaşı. Kullanıcının verilerine bakarak iki kısa şey üret. Düzgün Türkçe, yıldız/tire/madde işareti YOK. Şu iki satırı tam bu formatta ver, başka hiçbir şey yazma:
-ONERI: (verilerine bakarak bugüne dair tek cümlelik sıcak, kişisel, işine yarar bir öneri. Örneğin bekleyen alacak, hedefe uzaklık, satılmamış eser, atölye işi gibi somut bir şeye değin. Veri yoksa nazik bir motivasyon.)
+ONERI: (verilerine bakarak bugüne dair tek cümlelik sıcak, kişisel, işine yarar bir öneri. Veri yoksa nazik bir motivasyon.)
 BILGI: (antika, sanat, mozaik, dönem ya da bir usta hakkında tek cümlelik ilginç, kısa bir günün bilgisi. Her seferinde farklı olsun.)`,
       messages: [{ role:'user', content: `Kullanıcının verisi:\n${context}\n\nBugün için ONERI ve BILGI üret.` }],
     });
