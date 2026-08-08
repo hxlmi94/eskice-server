@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Eserlerim — Eskice</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#8a6435">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <style>
   :root{--bronz:#8a6435;--bronz2:#6e5323;--yazi:#5f4623;--muted:#8a7a5f;--krem:#fbf5e9;--line:#d8c39c;--yesil:#5b7048}
@@ -28,13 +30,15 @@
   .durum{font-size:11px;padding:2px 10px;border-radius:20px}
   .durum.stokta{background:#e6efe0;color:var(--yesil)}
   .durum.satildi{background:#ece3d6;color:var(--muted)}
+  .satbtn{margin-top:10px;background:linear-gradient(180deg,#a97c46,#8a6435);color:var(--krem);border:none;border-radius:20px;padding:7px 18px;font-family:'EB Garamond',serif;font-size:14px;cursor:pointer}
+  .satili{margin-top:10px;font-size:13px;color:var(--muted);font-style:italic}
   .bos{text-align:center;color:var(--muted);font-style:italic;padding:40px 16px;border:1px dashed var(--line);border-radius:14px}
   .yukleniyor{text-align:center;color:var(--muted);padding:40px;font-style:italic}
-  /* pencere */
   .perde{position:fixed;inset:0;background:rgba(50,35,15,.55);z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
   .pencere{background:#f7f0e0;border-radius:18px;padding:22px;width:100%;max-width:400px;border:1px solid var(--line)}
   .pencere h3{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--yazi);margin-bottom:14px;text-align:center}
-  .onizle{width:100%;max-height:220px;object-fit:contain;border-radius:12px;border:1px solid var(--line);margin-bottom:14px;display:none}
+  .onizle{width:100%;max-height:200px;object-fit:contain;border-radius:12px;border:1px solid var(--line);margin-bottom:12px;display:none}
+  .fotosec{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:rgba(138,100,53,.1);color:var(--bronz2);border:1px dashed var(--line);border-radius:10px;padding:12px;font-family:'EB Garamond',serif;font-size:15px;cursor:pointer;margin-bottom:12px}
   .pencere input{width:100%;background:#fffdf7;border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--yazi);font-family:'EB Garamond',serif;font-size:16px;margin-bottom:12px}
   .pbtn{width:100%;border:none;border-radius:11px;padding:13px;font-family:'EB Garamond',serif;font-size:16px;cursor:pointer;margin-bottom:8px}
   .pbtn.degerle{background:linear-gradient(180deg,#a97c46,#8a6435);color:var(--krem)}
@@ -49,19 +53,17 @@
       <a class="geri" href="menu.html">‹</a>
       <div class="baslik">Eserlerim</div>
     </div>
-
     <button class="ekle" id="ekleBtn">📷 Eser Ekle</button>
     <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none">
-
     <div class="sayi" id="sayi"></div>
     <div class="liste" id="liste"><div class="yukleniyor">Yükleniyor...</div></div>
   </div>
 
-  <!-- Ekleme penceresi -->
   <div class="perde" id="perde">
     <div class="pencere">
       <h3>Yeni Eser</h3>
       <img class="onizle" id="onizle">
+      <button class="fotosec" id="fotosecBtn">📷 Fotoğraf ekle</button>
       <input type="text" id="eserAd" placeholder="Eserin adı (örn: bakır cezve)">
       <div class="durumyazi" id="durumyazi"></div>
       <button class="pbtn degerle" id="degerleBtn">Eskice değerlendirsin</button>
@@ -72,95 +74,83 @@
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-const SERVER = 'https://eskice-server.onrender.com';
+const SERVER='https://eskice-server.onrender.com';
 const supabase = createClient(
   'https://mepfyrnmscrqbzxlbjyf.supabase.co',
   'sb_publishable_QE5BnaX_nvb36agQ0t0GNw_wkASsY06'
 );
-
-let seciliFoto = null; // {data, type, url}
+let seciliFoto=null, eserler=[];
 
 async function yukle(){
-  const liste = document.getElementById('liste');
+  const liste=document.getElementById('liste');
   try{
     const { data, error } = await supabase.from('eserler').select('*').order('created_at',{ascending:false});
     if(error) throw error;
-    if(!data || !data.length){
-      liste.innerHTML='<div class="bos">Henüz eser yok. Üstteki Eser Ekle ile fotoğraf çekip kaydedebilirsin.</div>';
-      document.getElementById('sayi').textContent=''; return;
-    }
-    document.getElementById('sayi').textContent = data.length + ' eser';
-    liste.innerHTML = data.map(e=>{
-      const bilgi = [e.donem].filter(Boolean).join(' · ');
-      const durum = (e.durum||'stokta').toLowerCase();
-      const foto = e.foto_url ? '<img class="kartfoto" src="'+e.foto_url+'">' : '<div class="kartfoto yok">🏺</div>';
+    eserler=data||[];
+    if(!eserler.length){ liste.innerHTML='<div class="bos">Henüz eser yok. Eser Ekle ile fotoğraf çekip kaydet.</div>'; document.getElementById('sayi').textContent=''; return; }
+    document.getElementById('sayi').textContent=eserler.length+' eser';
+    liste.innerHTML=eserler.map(e=>{
+      const bilgi=[e.donem].filter(Boolean).join(' · ');
+      const durum=(e.durum||'stokta').toLowerCase();
+      const foto=e.foto_url?'<img class="kartfoto" src="'+e.foto_url+'">':'<div class="kartfoto yok">🏺</div>';
+      const btn = durum==='satildi'
+        ? '<div class="satili">✓ satıldı'+(e.satis_fiyati?' — '+e.satis_fiyati:'')+'</div>'
+        : '<button class="satbtn" onclick="window.sat(\''+e.id+'\')">Sat</button>';
       return '<div class="kart">'+foto+'<div class="kartic"><div class="ad">'+(e.ad||'-')+'</div>'+
         (bilgi?'<div class="bilgi">'+bilgi+'</div>':'')+
-        '<div class="alt"><span class="deger">'+(e.tahmini_deger||'')+'</span>'+
-        '<span class="durum '+durum+'">'+durum+'</span></div></div></div>';
+        '<div class="alt"><span class="deger">'+(e.tahmini_deger||'')+'</span><span class="durum '+durum+'">'+durum+'</span></div>'+btn+'</div></div>';
     }).join('');
   }catch(err){ liste.innerHTML='<div class="bos">Okunamadı: '+err.message+'</div>'; }
 }
 
-// Kamera / galeri aç
-document.getElementById('ekleBtn').onclick = ()=> document.getElementById('fotoInput').click();
-document.getElementById('fotoInput').onchange = (ev)=>{
-  const f = ev.target.files[0]; if(!f) return;
-  const r = new FileReader();
-  r.onload = ()=>{
-    seciliFoto = { data: r.result.split(',')[1], type: f.type, url: r.result };
-    document.getElementById('onizle').src = r.result;
-    document.getElementById('onizle').style.display = 'block';
-    document.getElementById('eserAd').value = '';
-    document.getElementById('durumyazi').textContent = '';
-    document.getElementById('perde').style.display = 'flex';
-  };
+// Sat — sunucu üstünden
+window.sat = async (id)=>{
+  const eser=eserler.find(e=>String(e.id)===String(id)); if(!eser) return;
+  const fiyat=prompt('"'+eser.ad+'" kaça satıldı? (sadece rakam)'); if(fiyat===null) return;
+  try{
+    await fetch(SERVER+'/eser-sat',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id, ad:eser.ad, fiyat})});
+    yukle();
+  }catch(err){ alert('Olmadı, tekrar dene'); }
+};
+
+// ekleme penceresi
+document.getElementById('ekleBtn').onclick=()=>document.getElementById('fotoInput').click();
+document.getElementById('fotosecBtn').onclick=()=>document.getElementById('fotoInput').click();
+document.getElementById('fotoInput').onchange=(ev)=>{
+  const f=ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ seciliFoto={data:r.result.split(',')[1],type:f.type};
+    document.getElementById('onizle').src=r.result; document.getElementById('onizle').style.display='block';
+    document.getElementById('eserAd').value=''; document.getElementById('durumyazi').textContent='';
+    document.getElementById('perde').style.display='flex'; };
   r.readAsDataURL(f);
 };
+document.getElementById('kapatBtn').onclick=()=>{ document.getElementById('perde').style.display='none'; seciliFoto=null; };
 
-document.getElementById('kapatBtn').onclick = ()=>{
-  document.getElementById('perde').style.display='none'; seciliFoto=null;
-};
-
-// Fotoğrafı Storage'a yükle, public url dön
-async function fotoYukleStorage(){
-  try{
-    const ad = 'eser_'+Date.now()+'.'+((seciliFoto.type||'').includes('png')?'png':'jpg');
-    const buf = Uint8Array.from(atob(seciliFoto.data), c=>c.charCodeAt(0));
-    const { error } = await supabase.storage.from('fotograflar').upload(ad, buf, { contentType: seciliFoto.type||'image/jpeg' });
-    if(error) return null;
-    return 'https://mepfyrnmscrqbzxlbjyf.supabase.co/storage/v1/object/public/fotograflar/'+ad;
-  }catch(e){ return null; }
-}
-
-// Hızlı kaydet: sadece isim + foto
-document.getElementById('hizliBtn').onclick = async ()=>{
-  const ad = document.getElementById('eserAd').value.trim();
+// Hızlı kaydet — sunucu üstünden (/ask ile, foto + isim)
+document.getElementById('hizliBtn').onclick=async ()=>{
+  const ad=document.getElementById('eserAd').value.trim();
   if(!ad){ document.getElementById('durumyazi').textContent='Önce bir isim yaz'; return; }
   document.getElementById('durumyazi').textContent='Kaydediliyor...';
-  const foto_url = await fotoYukleStorage();
   try{
-    await supabase.from('eserler').insert({ ad, durum:'stokta', foto_url });
+    await fetch(SERVER+'/eser-ekle',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ad, foto:seciliFoto?{data:seciliFoto.data,type:seciliFoto.type}:null})});
     document.getElementById('perde').style.display='none'; seciliFoto=null; yukle();
-  }catch(err){ document.getElementById('durumyazi').textContent='Olmadı: '+err.message; }
+  }catch(err){ document.getElementById('durumyazi').textContent='Olmadı, tekrar dene'; }
 };
 
-// Eskice değerlendirsin: fotoyu sunucuya gönder, o değerlendirip kaydetsin
-document.getElementById('degerleBtn').onclick = async ()=>{
-  if(!seciliFoto){ return; }
+// Eskice değerlendirsin — /ask
+document.getElementById('degerleBtn').onclick=async ()=>{
+  if(!seciliFoto){ document.getElementById('durumyazi').textContent='Önce fotoğraf ekle'; return; }
   document.getElementById('durumyazi').textContent='Eskice bakıyor...';
   try{
-    const r = await fetch(SERVER+'/ask', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        question: 'Bu eseri değerlendir ve mutlaka kaydet. Kısaca ne olduğu, dönemi ve tahmini değerini söyle.',
-        dosya: { data: seciliFoto.data, type: seciliFoto.type }
-      })
-    });
-    const j = await r.json();
-    document.getElementById('durumyazi').textContent = j.answer ? 'Eklendi ✓' : 'Bir sorun oldu';
-    setTimeout(()=>{ document.getElementById('perde').style.display='none'; seciliFoto=null; yukle(); }, 1200);
-  }catch(err){ document.getElementById('durumyazi').textContent='Bağlanamadı, tekrar dene'; }
+    const r=await fetch(SERVER+'/ask',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({question:'Bu eseri değerlendir ve mutlaka kaydet. Kısaca ne olduğu, dönemi ve tahmini değeri.', dosya:{data:seciliFoto.data,type:seciliFoto.type}})});
+    const j=await r.json();
+    document.getElementById('durumyazi').textContent=j.answer?'Eklendi ✓':'Sorun oldu';
+    setTimeout(()=>{ document.getElementById('perde').style.display='none'; seciliFoto=null; yukle(); },1200);
+  }catch(err){ document.getElementById('durumyazi').textContent='Bağlanamadı'; }
 };
 
 yukle();
