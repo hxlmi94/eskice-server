@@ -39,16 +39,18 @@ Bir esere baktığında uygunsa kısacık bir hikaye ya da tarihi dokunuş kat, 
 
 NASIL KONUŞURSUN: İnsan gibi, kısa. Madde işareti, yıldız, tire YOK. Düzgün Türkçe: ı, ş, ğ, ç, ö, ü. Para: altı yüz lira, yani 600 TL.
 
-KULLANICIYI TANI: Sana hafıza, müşteri ve atölye bilgileri verilir. Hatırla, sohbete kat.
+KULLANICIYI TANI: Sana hafıza, müşteri, atölye ve borç bilgileri verilir. Hatırla, sohbete kat.
 
 ANTİKA DEĞERLEME: Eser anlatılınca ya da fotoğrafı gelince kısaca ne olduğu, dönemi, durumu, tahmini değer aralığı. Kesin fiyat verme, aralık ver.
 
 MÜŞTERİ EŞLEŞTİRME: Yeni eser gösterildiğinde onu arayan müşteri varsa kendiliğinden hatırlat.
 
 ATÖLYE - KENDİ ÜRETİMLERİ (mozaik, çanta gibi):
-Kullanıcı kendi yaptığı bir işi anlatırsa bunu atölye işi olarak kaydet. Malzeme maliyetlerini toplayıp söyle. Fiyat sorulursa malzeme ve emek üstünden mantıklı bir satış fiyatı aralığı öner. Nerede satabileceğini sorarsa GERÇEK ve somut yerler söyle: Etsy, Instagram üzerinden satış, yerel el sanatları ve tasarım pazarları, butik hediyelik dükkanları, zanaat fuarları. Uydurma alıcı deme, sadece gerçek satış kanalları. Sattığında kârını hesapla. Nasıl ilerleyeceğini sorarsa dürüst, uygulanabilir tavsiye ver.
+Kullanıcı kendi yaptığı işi anlatırsa atölye işi olarak kaydet. Malzeme maliyetlerini topla. Fiyat sorulursa malzeme ve emek üstünden mantıklı aralık öner. Nerede satılır sorulursa GERÇEK yerler: Etsy, Instagram, yerel el sanatları ve tasarım pazarları, butik hediyelik dükkanları, zanaat fuarları. Uydurma alıcı deme. Sattığında kârı hesapla. Nasıl ilerler sorulursa uygulanabilir tavsiye ver.
 
-WEB ARAŞTIRMASI: Sadece kullanıcı açıkça güncel fiyat/piyasa/araştır derse yap, yoksa arama.
+BORÇ ALACAK: Kullanıcı birinin ona borçlu olduğunu ya da kendisinin birine borçlu olduğunu söylerse kaydet.
+
+WEB ARAŞTIRMASI: Sadece kullanıcı açıkça güncel fiyat/piyasa/araştır derse yap.
 
 KAYIT SATIRLARI — ÖNEMLİ: Cevabının EN SONUNA ilgili satırı MUTLAKA ekle. Kullanıcı bunu görmez.
 Kalıcı bilgi: [[HAFIZA|bilgi]]
@@ -58,12 +60,13 @@ Müşteri: [[MUSTERI|isim|aradigi|telefon|not]]
 Gider: [[GIDER|aciklama|tutar|tarih]]
 Atölye işi: [[ATOLYE|ad|tur|malzeme_maliyeti|emek_saati|onerilen_fiyat|durum]]
 Atölye satışı: [[ATOLYESAT|ad|satis_fiyati]]
+Borç/alacak: [[BORC|kisi|tutar|tur|aciklama]]  (tur: alacak = kişi sana borçlu, borc = sen borçlusun)
 
 Bu teknik satırlar hariç düzgün Türkçe kullan.`;
 
 async function buildContext() {
   const parts = [`Bugün: ${new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}`];
-  const tablolar = ['hafiza', 'eserler', 'kullanici_profili', 'alim_satim', 'musteriler', 'giderler', 'atolye'];
+  const tablolar = ['hafiza', 'eserler', 'kullanici_profili', 'alim_satim', 'musteriler', 'giderler', 'atolye', 'borc_alacak'];
   for (const t of tablolar) {
     try {
       const { data, error } = await supabase.from(t).select('*').limit(300);
@@ -81,6 +84,18 @@ app.post('/atolye-ekle', async (req, res) => {
       ad:(b.ad||'').trim(), tur:(b.tur||'').trim(),
       malzeme_maliyeti: Number(b.malzeme_maliyeti)||0, emek_saati: Number(b.emek_saati)||0,
       durum:(b.durum||'yapiliyor').trim(), foto_url: b.foto_url||null
+    });
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/borc-ekle', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const { error } = await supabase.from('borc_alacak').insert({
+      kisi:(b.kisi||'').trim(), tutar: Number(b.tutar)||0,
+      tur:(b.tur||'alacak').trim(), aciklama:(b.aciklama||'').trim()
     });
     if (error) return res.status(500).json({ error: error.message });
     res.json({ ok: true });
@@ -137,27 +152,12 @@ app.post('/ask', async (req, res) => {
     if (m) { cevap = cevap.replace(m[0], '').trim(); try { await supabase.from('musteriler').insert({ isim:(m[1]||'').trim(), aradigi:(m[2]||'').trim(), telefon:(m[3]||'').trim(), not_:(m[4]||'').trim() }); } catch (err) {} }
     const g = cevap.match(/\[\[GIDER\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
     if (g) { cevap = cevap.replace(g[0], '').trim(); try { await supabase.from('giderler').insert({ aciklama:(g[1]||'').trim(), tutar:(g[2]||'').trim(), tarih:(g[3]||'').trim() }); } catch (err) {} }
-
     const a = cevap.match(/\[\[ATOLYE\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
-    if (a) {
-      cevap = cevap.replace(a[0], '').trim();
-      try {
-        await supabase.from('atolye').insert({
-          ad:(a[1]||'').trim(), tur:(a[2]||'').trim(),
-          malzeme_maliyeti: sayi(a[3]) ?? 0, emek_saati: sayi(a[4]) ?? 0,
-          onerilen_fiyat: sayi(a[5]), durum:(a[6]||'yapiliyor').trim(), foto_url: fotoUrl
-        });
-      } catch (err) {}
-    }
+    if (a) { cevap = cevap.replace(a[0], '').trim(); try { await supabase.from('atolye').insert({ ad:(a[1]||'').trim(), tur:(a[2]||'').trim(), malzeme_maliyeti: sayi(a[3]) ?? 0, emek_saati: sayi(a[4]) ?? 0, onerilen_fiyat: sayi(a[5]), durum:(a[6]||'yapiliyor').trim(), foto_url: fotoUrl }); } catch (err) {} }
     const asat = cevap.match(/\[\[ATOLYESAT\|([^|]*)\|([^\]]*)\]\]/);
-    if (asat) {
-      cevap = cevap.replace(asat[0], '').trim();
-      try {
-        const ad=(asat[1]||'').trim(); const fy=sayi(asat[2]);
-        const { data: bul } = await supabase.from('atolye').select('*').ilike('ad','%'+ad+'%').limit(1);
-        if (bul && bul.length) await supabase.from('atolye').update({ durum:'satildi', satis_fiyati: fy }).eq('id', bul[0].id);
-      } catch (err) {}
-    }
+    if (asat) { cevap = cevap.replace(asat[0], '').trim(); try { const ad=(asat[1]||'').trim(); const fy=sayi(asat[2]); const { data: bul } = await supabase.from('atolye').select('*').ilike('ad','%'+ad+'%').limit(1); if (bul && bul.length) await supabase.from('atolye').update({ durum:'satildi', satis_fiyati: fy }).eq('id', bul[0].id); } catch (err) {} }
+    const bc = cevap.match(/\[\[BORC\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
+    if (bc) { cevap = cevap.replace(bc[0], '').trim(); try { await supabase.from('borc_alacak').insert({ kisi:(bc[1]||'').trim(), tutar: sayi(bc[2]) ?? 0, tur:(bc[3]||'alacak').trim(), aciklama:(bc[4]||'').trim() }); } catch (err) {} }
 
     res.json({ answer: cevap, foto: fotoUrl });
   } catch (err) {
