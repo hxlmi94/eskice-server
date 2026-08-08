@@ -79,74 +79,86 @@ async function buildContext() {
   return parts.join('\n\n');
 }
 
+/* ---- ESER ---- */
 app.post('/eser-ekle', async (req, res) => {
-  try {
-    const b = req.body || {};
-    let fotoUrl = null;
-    if (b.foto && b.foto.data) fotoUrl = await fotoYukle(b.foto.data, b.foto.type);
-    const { error } = await supabase.from('eserler').insert({ ad:(b.ad||'').trim(), durum:'stokta', foto_url: fotoUrl });
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ ok: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  try { const b=req.body||{}; let f=null; if(b.foto&&b.foto.data) f=await fotoYukle(b.foto.data,b.foto.type);
+    const { error }=await supabase.from('eserler').insert({ ad:(b.ad||'').trim(), durum:'stokta', foto_url:f });
+    if(error) return res.status(500).json({error:error.message}); res.json({ok:true});
+  } catch(err){ res.status(500).json({error:err.message}); }
 });
-
 app.post('/eser-sat', async (req, res) => {
-  try {
-    const b = req.body || {};
-    const fy = sayi(b.fiyat);
-    await supabase.from('eserler').update({ durum:'satildi', satis_fiyati: b.fiyat }).eq('id', b.id);
-    const bugun = new Date().toLocaleDateString('tr-TR');
-    await supabase.from('alim_satim').insert({ tur:'satis', ad:(b.ad||'').trim(), fiyat:(fy!=null?fy:0)+' TL', tarih: bugun });
-    res.json({ ok: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  try { const b=req.body||{}; const fy=sayi(b.fiyat);
+    await supabase.from('eserler').update({durum:'satildi',satis_fiyati:b.fiyat}).eq('id',b.id);
+    await supabase.from('alim_satim').insert({tur:'satis',ad:(b.ad||'').trim(),fiyat:(fy!=null?fy:0)+' TL',tarih:new Date().toLocaleDateString('tr-TR')});
+    res.json({ok:true});
+  } catch(err){ res.status(500).json({error:err.message}); }
 });
-
 app.post('/eser-guncelle', async (req, res) => {
-  try {
-    const b = req.body || {};
-    const alan = {};
-    if (b.ad!==undefined) alan.ad=(b.ad||'').trim();
-    if (b.donem!==undefined) alan.donem=(b.donem||'').trim();
-    if (b.tahmini_deger!==undefined) alan.tahmini_deger=(b.tahmini_deger||'').trim();
-    if (b.durum!==undefined) alan.durum=(b.durum||'stokta').trim();
-    const { error } = await supabase.from('eserler').update(alan).eq('id', b.id);
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ ok: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  try { const b=req.body||{}; const a={};
+    if(b.ad!==undefined)a.ad=(b.ad||'').trim(); if(b.donem!==undefined)a.donem=(b.donem||'').trim();
+    if(b.tahmini_deger!==undefined)a.tahmini_deger=(b.tahmini_deger||'').trim(); if(b.durum!==undefined)a.durum=(b.durum||'stokta').trim();
+    const { error }=await supabase.from('eserler').update(a).eq('id',b.id);
+    if(error) return res.status(500).json({error:error.message}); res.json({ok:true});
+  } catch(err){ res.status(500).json({error:err.message}); }
 });
-
 app.post('/eser-sil', async (req, res) => {
-  try {
-    const b = req.body || {};
-    const { error } = await supabase.from('eserler').delete().eq('id', b.id);
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ ok: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  try { const { error }=await supabase.from('eserler').delete().eq('id',(req.body||{}).id);
+    if(error) return res.status(500).json({error:error.message}); res.json({ok:true});
+  } catch(err){ res.status(500).json({error:err.message}); }
 });
 
+/* ---- ATÖLYE ---- */
 app.post('/atolye-ekle', async (req, res) => {
-  try {
-    const b = req.body || {};
-    const { error } = await supabase.from('atolye').insert({
-      ad:(b.ad||'').trim(), tur:(b.tur||'').trim(),
-      malzeme_maliyeti: Number(b.malzeme_maliyeti)||0, emek_saati: Number(b.emek_saati)||0,
-      durum:(b.durum||'yapiliyor').trim(), foto_url: b.foto_url||null
-    });
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ ok: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  try { const b=req.body||{};
+    const { error }=await supabase.from('atolye').insert({ ad:(b.ad||'').trim(), tur:(b.tur||'').trim(),
+      malzeme_maliyeti:Number(b.malzeme_maliyeti)||0, emek_saati:Number(b.emek_saati)||0, durum:(b.durum||'yapiliyor').trim(), foto_url:b.foto_url||null });
+    if(error) return res.status(500).json({error:error.message}); res.json({ok:true});
+  } catch(err){ res.status(500).json({error:err.message}); }
+});
+app.post('/atolye-guncelle', async (req, res) => {
+  try { const b=req.body||{}; const a={};
+    if(b.ad!==undefined)a.ad=(b.ad||'').trim(); if(b.tur!==undefined)a.tur=(b.tur||'').trim();
+    if(b.malzeme_maliyeti!==undefined)a.malzeme_maliyeti=Number(b.malzeme_maliyeti)||0;
+    if(b.emek_saati!==undefined)a.emek_saati=Number(b.emek_saati)||0;
+    if(b.durum!==undefined)a.durum=(b.durum||'yapiliyor').trim();
+    if(b.satis_fiyati!==undefined)a.satis_fiyati=sayi(b.satis_fiyati);
+    const { error }=await supabase.from('atolye').update(a).eq('id',b.id);
+    if(error) return res.status(500).json({error:error.message}); res.json({ok:true});
+  } catch(err){ res.status(500).json({error:err.message}); }
+});
+app.post('/atolye-sil', async (req, res) => {
+  try { const { error }=await supabase.from('atolye').delete().eq('id',(req.body||{}).id);
+    if(error) return res.status(500).json({error:error.message}); res.json({ok:true});
+  } catch(err){ res.status(500).json({error:err.message}); }
 });
 
+/* ---- MÜŞTERİ ---- */
+app.post('/musteri-ekle', async (req, res) => {
+  try { const b=req.body||{};
+    const { error }=await supabase.from('musteriler').insert({ isim:(b.isim||'').trim(), aradigi:(b.aradigi||'').trim(), telefon:(b.telefon||'').trim(), not_:(b.not_||'').trim() });
+    if(error) return res.status(500).json({error:error.message}); res.json({ok:true});
+  } catch(err){ res.status(500).json({error:err.message}); }
+});
+app.post('/musteri-guncelle', async (req, res) => {
+  try { const b=req.body||{}; const a={};
+    if(b.isim!==undefined)a.isim=(b.isim||'').trim(); if(b.aradigi!==undefined)a.aradigi=(b.aradigi||'').trim();
+    if(b.telefon!==undefined)a.telefon=(b.telefon||'').trim(); if(b.not_!==undefined)a.not_=(b.not_||'').trim();
+    const { error }=await supabase.from('musteriler').update(a).eq('id',b.id);
+    if(error) return res.status(500).json({error:error.message}); res.json({ok:true});
+  } catch(err){ res.status(500).json({error:err.message}); }
+});
+app.post('/musteri-sil', async (req, res) => {
+  try { const { error }=await supabase.from('musteriler').delete().eq('id',(req.body||{}).id);
+    if(error) return res.status(500).json({error:error.message}); res.json({ok:true});
+  } catch(err){ res.status(500).json({error:err.message}); }
+});
+
+/* ---- BORÇ ---- */
 app.post('/borc-ekle', async (req, res) => {
-  try {
-    const b = req.body || {};
-    const { error } = await supabase.from('borc_alacak').insert({
-      kisi:(b.kisi||'').trim(), tutar: Number(b.tutar)||0,
-      tur:(b.tur||'alacak').trim(), aciklama:(b.aciklama||'').trim()
-    });
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ ok: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  try { const b=req.body||{};
+    const { error }=await supabase.from('borc_alacak').insert({ kisi:(b.kisi||'').trim(), tutar:Number(b.tutar)||0, tur:(b.tur||'alacak').trim(), aciklama:(b.aciklama||'').trim() });
+    if(error) return res.status(500).json({error:error.message}); res.json({ok:true});
+  } catch(err){ res.status(500).json({error:err.message}); }
 });
 
 app.post('/gunun', async (req, res) => {
@@ -154,8 +166,7 @@ app.post('/gunun', async (req, res) => {
     const ad = (req.body && req.body.kullaniciAdi) ? String(req.body.kullaniciAdi).trim() : '';
     const context = await buildContext();
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 320,
+      model: 'claude-sonnet-4-6', max_tokens: 320,
       system: `Sen Eskice'sin, antikacı ve sanatçı ${ad||'kullanıcının'} yol arkadaşı. Kullanıcının verilerine bakarak iki kısa şey üret. Düzgün Türkçe, yıldız/tire/madde işareti YOK. Şu iki satırı tam bu formatta ver, başka hiçbir şey yazma:
 ONERI: (verilerine bakarak bugüne dair tek cümlelik sıcak, kişisel, işine yarar bir öneri. Veri yoksa nazik bir motivasyon.)
 BILGI: (antika, sanat, mozaik, dönem ya da bir usta hakkında tek cümlelik ilginç, kısa bir günün bilgisi. Her seferinde farklı olsun.)`,
@@ -163,8 +174,8 @@ BILGI: (antika, sanat, mozaik, dönem ya da bir usta hakkında tek cümlelik ilg
     });
     let t = message.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
     let oneri='', bilgi='';
-    const mo = t.match(/ONERI:\s*(.+)/i); if(mo) oneri=mo[1].trim();
-    const mb = t.match(/BILGI:\s*(.+)/i); if(mb) bilgi=mb[1].trim();
+    const mo=t.match(/ONERI:\s*(.+)/i); if(mo) oneri=mo[1].trim();
+    const mb=t.match(/BILGI:\s*(.+)/i); if(mb) bilgi=mb[1].trim();
     res.json({ oneri, bilgi });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -173,12 +184,9 @@ app.post('/ask', async (req, res) => {
   try {
     const { question, dosya, gecmis, kullaniciAdi } = req.body;
     if (!question && !dosya) return res.status(400).json({ error: 'soru veya dosya gerekli' });
-
     const soruMetni = (question || '').toLowerCase();
     const aramaIster = /araştır|arastir|güncel|guncel|kaça gidiyor|piyasa|internetten|son fiyat|ne kadara satıl/.test(soruMetni);
-
-    let fotoUrl = null;
-    let icerik;
+    let fotoUrl = null; let icerik;
     if (dosya && dosya.data) {
       if (dosya.type && dosya.type.startsWith('image/')) fotoUrl = await fotoYukle(dosya.data, dosya.type);
       const blok = dosya.type === 'application/pdf'
@@ -186,25 +194,14 @@ app.post('/ask', async (req, res) => {
         : { type: 'image', source: { type: 'base64', media_type: dosya.type, data: dosya.data } };
       icerik = [blok, { type: 'text', text: question || 'Bunu kısaca değerlendir.' }];
     } else { icerik = question; }
-
     const mesajlar = [];
-    if (Array.isArray(gecmis)) {
-      gecmis.slice(-14).forEach(m => { if (m && m.rol && m.metin) mesajlar.push({ role: m.rol === 'eskice' ? 'assistant' : 'user', content: m.metin }); });
-    }
+    if (Array.isArray(gecmis)) gecmis.slice(-14).forEach(m => { if (m && m.rol && m.metin) mesajlar.push({ role: m.rol === 'eskice' ? 'assistant' : 'user', content: m.metin }); });
     mesajlar.push({ role: 'user', content: icerik });
-
     let sistem = SYSTEM_PROMPT;
     if (kullaniciAdi && kullaniciAdi.trim()) sistem += `\n\nKullanıcının adı: ${kullaniciAdi.trim()}. Ona bu isimle seslen.`;
     const context = await buildContext();
-
-    const istek = {
-      model: 'claude-sonnet-4-6',
-      max_tokens: 900,
-      system: `${sistem}\n\nKullanıcının verisi:\n${context}`,
-      messages: mesajlar,
-    };
+    const istek = { model: 'claude-sonnet-4-6', max_tokens: 900, system: `${sistem}\n\nKullanıcının verisi:\n${context}`, messages: mesajlar };
     if (aramaIster) istek.tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }];
-
     const message = await anthropic.messages.create(istek);
     let cevap = message.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
     if (!cevap) cevap = 'Bir şeyler ters gitti, tekrar dener misin?';
@@ -227,10 +224,7 @@ app.post('/ask', async (req, res) => {
     if (bc) { cevap = cevap.replace(bc[0], '').trim(); try { await supabase.from('borc_alacak').insert({ kisi:(bc[1]||'').trim(), tutar: sayi(bc[2]) ?? 0, tur:(bc[3]||'alacak').trim(), aciklama:(bc[4]||'').trim() }); } catch (err) {} }
 
     res.json({ answer: cevap, foto: fotoUrl });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { console.error(err); res.status(500).json({ error: err.message }); }
 });
 
 app.post('/ses', async (req, res) => {
@@ -239,14 +233,12 @@ app.post('/ses', async (req, res) => {
     if (!metin) return res.status(400).json({ error: 'metin gerekli' });
     const voiceId = 'EXAVITQu4vr4xnSDxMaL';
     const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-      method: 'POST',
-      headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: metin, model_id: 'eleven_multilingual_v2', voice_settings: { stability: 0.4, similarity_boost: 0.85, style: 0.25, use_speaker_boost: true } }),
     });
     if (!r.ok) { const t = await r.text(); return res.status(500).json({ error: t }); }
     const buf = Buffer.from(await r.arrayBuffer());
-    res.set('Content-Type', 'audio/mpeg');
-    res.send(buf);
+    res.set('Content-Type', 'audio/mpeg'); res.send(buf);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
