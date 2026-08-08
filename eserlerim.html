@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#8a6435">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <style>
-  :root{--bronz:#8a6435;--bronz2:#6e5323;--yazi:#5f4623;--muted:#8a7a5f;--krem:#fbf5e9;--line:#d8c39c;--yesil:#5b7048}
+  :root{--bronz:#8a6435;--bronz2:#6e5323;--yazi:#5f4623;--muted:#8a7a5f;--krem:#fbf5e9;--line:#d8c39c;--yesil:#5b7048;--kirmizi:#9b4a38}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'EB Garamond',serif;color:var(--yazi);min-height:100vh;display:flex;justify-content:center;background:#e7d4ab url('https://hxlmi94.github.io/eskice-server/sohbet.png') center/cover fixed no-repeat}
   body::before{content:"";position:fixed;inset:0;background:rgba(242,233,210,.62);z-index:0}
@@ -19,7 +19,7 @@
   .ekle{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:linear-gradient(160deg,#9a7238,#6e5323);color:var(--krem);border:none;border-radius:14px;padding:14px;font-family:'EB Garamond',serif;font-size:17px;cursor:pointer;margin-bottom:18px}
   .sayi{font-size:14px;color:var(--muted);font-style:italic;margin-bottom:14px}
   .liste{display:flex;flex-direction:column;gap:12px}
-  .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:14px;overflow:hidden;border-left:3px solid var(--bronz);display:flex;gap:12px}
+  .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:14px;overflow:hidden;border-left:3px solid var(--bronz);display:flex;gap:12px;cursor:pointer}
   .kartfoto{width:92px;object-fit:cover;background:#e7dcc4;align-self:stretch}
   .kartfoto.yok{display:flex;align-items:center;justify-content:center;color:#b9a884;font-size:28px;min-height:92px}
   .kartic{padding:12px 14px;flex:1}
@@ -35,14 +35,16 @@
   .bos{text-align:center;color:var(--muted);font-style:italic;padding:40px 16px;border:1px dashed var(--line);border-radius:14px}
   .yukleniyor{text-align:center;color:var(--muted);padding:40px;font-style:italic}
   .perde{position:fixed;inset:0;background:rgba(50,35,15,.55);z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
-  .pencere{background:#f7f0e0;border-radius:18px;padding:22px;width:100%;max-width:400px;border:1px solid var(--line)}
-  .pencere h3{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--yazi);margin-bottom:14px;text-align:center}
-  .onizle{width:100%;max-height:200px;object-fit:contain;border-radius:12px;border:1px solid var(--line);margin-bottom:12px;display:none}
+  .pencere{background:#f7f0e0;border-radius:18px;padding:22px;width:100%;max-width:400px;border:1px solid var(--line);max-height:92vh;overflow-y:auto}
+  .pencere h3{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--yazi);margin-bottom:14px;text-align:center}
+  .onizle{width:100%;max-height:180px;object-fit:contain;border-radius:12px;border:1px solid var(--line);margin-bottom:12px;display:none}
   .fotosec{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:rgba(138,100,53,.1);color:var(--bronz2);border:1px dashed var(--line);border-radius:10px;padding:12px;font-family:'EB Garamond',serif;font-size:15px;cursor:pointer;margin-bottom:12px}
-  .pencere input{width:100%;background:#fffdf7;border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--yazi);font-family:'EB Garamond',serif;font-size:16px;margin-bottom:12px}
+  .pencere label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+  .pencere input,.pencere select{width:100%;background:#fffdf7;border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--yazi);font-family:'EB Garamond',serif;font-size:16px;margin-bottom:12px}
   .pbtn{width:100%;border:none;border-radius:11px;padding:13px;font-family:'EB Garamond',serif;font-size:16px;cursor:pointer;margin-bottom:8px}
   .pbtn.degerle{background:linear-gradient(180deg,#a97c46,#8a6435);color:var(--krem)}
   .pbtn.hizli{background:rgba(138,100,53,.12);color:var(--bronz2);border:1px solid var(--line)}
+  .pbtn.sil{background:rgba(155,74,56,.1);color:var(--kirmizi);border:1px solid #e0c3bb}
   .pbtn.kapat{background:none;color:var(--muted)}
   .durumyazi{text-align:center;color:var(--bronz2);font-style:italic;font-size:14px;min-height:20px;margin-bottom:6px}
 </style>
@@ -59,16 +61,33 @@
     <div class="liste" id="liste"><div class="yukleniyor">Yükleniyor...</div></div>
   </div>
 
-  <div class="perde" id="perde">
+  <!-- Ekleme penceresi -->
+  <div class="perde" id="perdeEkle">
     <div class="pencere">
       <h3>Yeni Eser</h3>
       <img class="onizle" id="onizle">
       <button class="fotosec" id="fotosecBtn">📷 Fotoğraf ekle</button>
       <input type="text" id="eserAd" placeholder="Eserin adı (örn: bakır cezve)">
-      <div class="durumyazi" id="durumyazi"></div>
+      <div class="durumyazi" id="durumyaziEkle"></div>
       <button class="pbtn degerle" id="degerleBtn">Eskice değerlendirsin</button>
       <button class="pbtn hizli" id="hizliBtn">Hızlı kaydet</button>
-      <button class="pbtn kapat" id="kapatBtn">Vazgeç</button>
+      <button class="pbtn kapat" id="kapatEkle">Vazgeç</button>
+    </div>
+  </div>
+
+  <!-- Düzenleme penceresi -->
+  <div class="perde" id="perdeDuzen">
+    <div class="pencere">
+      <h3>Eseri Düzenle</h3>
+      <label>Adı</label><input type="text" id="dAd">
+      <label>Dönem</label><input type="text" id="dDonem" placeholder="örn: 1905 Belle Époque">
+      <label>Tahmini değer</label><input type="text" id="dDeger" placeholder="örn: 3000-15000 TL">
+      <label>Durum</label>
+      <select id="dDurum"><option value="stokta">Stokta</option><option value="satildi">Satıldı</option></select>
+      <div class="durumyazi" id="durumyaziDuzen"></div>
+      <button class="pbtn degerle" id="kaydetDuzen">Kaydet</button>
+      <button class="pbtn sil" id="silDuzen">Bu eseri sil</button>
+      <button class="pbtn kapat" id="kapatDuzen">Vazgeç</button>
     </div>
   </div>
 
@@ -79,7 +98,7 @@ const supabase = createClient(
   'https://mepfyrnmscrqbzxlbjyf.supabase.co',
   'sb_publishable_QE5BnaX_nvb36agQ0t0GNw_wkASsY06'
 );
-let seciliFoto=null, eserler=[];
+let seciliFoto=null, eserler=[], duzenId=null;
 
 async function yukle(){
   const liste=document.getElementById('liste');
@@ -95,26 +114,54 @@ async function yukle(){
       const foto=e.foto_url?'<img class="kartfoto" src="'+e.foto_url+'">':'<div class="kartfoto yok">🏺</div>';
       const btn = durum==='satildi'
         ? '<div class="satili">✓ satıldı'+(e.satis_fiyati?' — '+e.satis_fiyati:'')+'</div>'
-        : '<button class="satbtn" onclick="window.sat(\''+e.id+'\')">Sat</button>';
-      return '<div class="kart">'+foto+'<div class="kartic"><div class="ad">'+(e.ad||'-')+'</div>'+
+        : '<button class="satbtn" onclick="event.stopPropagation();window.sat(\''+e.id+'\')">Sat</button>';
+      return '<div class="kart" onclick="window.duzenle(\''+e.id+'\')">'+foto+'<div class="kartic"><div class="ad">'+(e.ad||'-')+'</div>'+
         (bilgi?'<div class="bilgi">'+bilgi+'</div>':'')+
         '<div class="alt"><span class="deger">'+(e.tahmini_deger||'')+'</span><span class="durum '+durum+'">'+durum+'</span></div>'+btn+'</div></div>';
     }).join('');
   }catch(err){ liste.innerHTML='<div class="bos">Okunamadı: '+err.message+'</div>'; }
 }
 
-// Sat — sunucu üstünden
+// SAT
 window.sat = async (id)=>{
   const eser=eserler.find(e=>String(e.id)===String(id)); if(!eser) return;
   const fiyat=prompt('"'+eser.ad+'" kaça satıldı? (sadece rakam)'); if(fiyat===null) return;
-  try{
-    await fetch(SERVER+'/eser-sat',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({id, ad:eser.ad, fiyat})});
-    yukle();
-  }catch(err){ alert('Olmadı, tekrar dene'); }
+  try{ await fetch(SERVER+'/eser-sat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id, ad:eser.ad, fiyat})}); yukle(); }
+  catch(err){ alert('Olmadı, tekrar dene'); }
 };
 
-// ekleme penceresi
+// DÜZENLE penceresini aç
+window.duzenle = (id)=>{
+  const e=eserler.find(x=>String(x.id)===String(id)); if(!e) return;
+  duzenId=id;
+  document.getElementById('dAd').value=e.ad||'';
+  document.getElementById('dDonem').value=e.donem||'';
+  document.getElementById('dDeger').value=e.tahmini_deger||'';
+  document.getElementById('dDurum').value=(e.durum||'stokta').toLowerCase()==='satildi'?'satildi':'stokta';
+  document.getElementById('durumyaziDuzen').textContent='';
+  document.getElementById('perdeDuzen').style.display='flex';
+};
+document.getElementById('kapatDuzen').onclick=()=>document.getElementById('perdeDuzen').style.display='none';
+
+document.getElementById('kaydetDuzen').onclick=async ()=>{
+  document.getElementById('durumyaziDuzen').textContent='Kaydediliyor...';
+  try{
+    await fetch(SERVER+'/eser-guncelle',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id:duzenId, ad:document.getElementById('dAd').value, donem:document.getElementById('dDonem').value, tahmini_deger:document.getElementById('dDeger').value, durum:document.getElementById('dDurum').value})});
+    document.getElementById('perdeDuzen').style.display='none'; yukle();
+  }catch(err){ document.getElementById('durumyaziDuzen').textContent='Olmadı, tekrar dene'; }
+};
+
+document.getElementById('silDuzen').onclick=async ()=>{
+  if(!confirm('Bu eser silinsin mi? Geri alınamaz.')) return;
+  document.getElementById('durumyaziDuzen').textContent='Siliniyor...';
+  try{
+    await fetch(SERVER+'/eser-sil',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:duzenId})});
+    document.getElementById('perdeDuzen').style.display='none'; yukle();
+  }catch(err){ document.getElementById('durumyaziDuzen').textContent='Olmadı, tekrar dene'; }
+};
+
+// EKLEME
 document.getElementById('ekleBtn').onclick=()=>document.getElementById('fotoInput').click();
 document.getElementById('fotosecBtn').onclick=()=>document.getElementById('fotoInput').click();
 document.getElementById('fotoInput').onchange=(ev)=>{
@@ -122,35 +169,33 @@ document.getElementById('fotoInput').onchange=(ev)=>{
   const r=new FileReader();
   r.onload=()=>{ seciliFoto={data:r.result.split(',')[1],type:f.type};
     document.getElementById('onizle').src=r.result; document.getElementById('onizle').style.display='block';
-    document.getElementById('eserAd').value=''; document.getElementById('durumyazi').textContent='';
-    document.getElementById('perde').style.display='flex'; };
+    document.getElementById('eserAd').value=''; document.getElementById('durumyaziEkle').textContent='';
+    document.getElementById('perdeEkle').style.display='flex'; };
   r.readAsDataURL(f);
 };
-document.getElementById('kapatBtn').onclick=()=>{ document.getElementById('perde').style.display='none'; seciliFoto=null; };
+document.getElementById('kapatEkle').onclick=()=>{ document.getElementById('perdeEkle').style.display='none'; seciliFoto=null; };
 
-// Hızlı kaydet — sunucu üstünden (/ask ile, foto + isim)
 document.getElementById('hizliBtn').onclick=async ()=>{
   const ad=document.getElementById('eserAd').value.trim();
-  if(!ad){ document.getElementById('durumyazi').textContent='Önce bir isim yaz'; return; }
-  document.getElementById('durumyazi').textContent='Kaydediliyor...';
+  if(!ad){ document.getElementById('durumyaziEkle').textContent='Önce bir isim yaz'; return; }
+  document.getElementById('durumyaziEkle').textContent='Kaydediliyor...';
   try{
-    await fetch(SERVER+'/eser-ekle',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ad, foto:seciliFoto?{data:seciliFoto.data,type:seciliFoto.type}:null})});
-    document.getElementById('perde').style.display='none'; seciliFoto=null; yukle();
-  }catch(err){ document.getElementById('durumyazi').textContent='Olmadı, tekrar dene'; }
+    await fetch(SERVER+'/eser-ekle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ad, foto:seciliFoto?{data:seciliFoto.data,type:seciliFoto.type}:null})});
+    document.getElementById('perdeEkle').style.display='none'; seciliFoto=null; yukle();
+  }catch(err){ document.getElementById('durumyaziEkle').textContent='Olmadı, tekrar dene'; }
 };
 
-// Eskice değerlendirsin — /ask
 document.getElementById('degerleBtn').onclick=async ()=>{
-  if(!seciliFoto){ document.getElementById('durumyazi').textContent='Önce fotoğraf ekle'; return; }
-  document.getElementById('durumyazi').textContent='Eskice bakıyor...';
+  if(!seciliFoto){ document.getElementById('durumyaziEkle').textContent='Önce fotoğraf ekle'; return; }
+  const btn=document.getElementById('degerleBtn'); btn.disabled=true;
+  document.getElementById('durumyaziEkle').textContent='Eskice bakıyor...';
   try{
     const r=await fetch(SERVER+'/ask',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({question:'Bu eseri değerlendir ve mutlaka kaydet. Kısaca ne olduğu, dönemi ve tahmini değeri.', dosya:{data:seciliFoto.data,type:seciliFoto.type}})});
+      body:JSON.stringify({question:'Bu eseri değerlendir ve SADECE BİR KERE kaydet. Kısaca ne olduğu, dönemi ve tahmini değeri.', dosya:{data:seciliFoto.data,type:seciliFoto.type}})});
     const j=await r.json();
-    document.getElementById('durumyazi').textContent=j.answer?'Eklendi ✓':'Sorun oldu';
-    setTimeout(()=>{ document.getElementById('perde').style.display='none'; seciliFoto=null; yukle(); },1200);
-  }catch(err){ document.getElementById('durumyazi').textContent='Bağlanamadı'; }
+    document.getElementById('durumyaziEkle').textContent=j.answer?'Eklendi ✓':'Sorun oldu';
+    setTimeout(()=>{ document.getElementById('perdeEkle').style.display='none'; seciliFoto=null; btn.disabled=false; yukle(); },1200);
+  }catch(err){ document.getElementById('durumyaziEkle').textContent='Bağlanamadı'; btn.disabled=false; }
 };
 
 yukle();
