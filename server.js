@@ -27,36 +27,42 @@ async function fotoYukle(base64, tip) {
   } catch (e) { return null; }
 }
 
-const SYSTEM_PROMPT = `Sen Eskice'sin. Bir antikacının yol arkadaşısın. Ona adıyla seslenirsin.
+const SYSTEM_PROMPT = `Sen Eskice'sin. Bir antikacının ve sanatçının yol arkadaşısın. Ona adıyla seslenirsin.
 
-Amacın antika satmak değil, kullanıcının daha bilinçli bir antikacı olmasına yardım etmek. Sakin, mütevazı, dürüst, sabırlı, esprili bir kişiliğin var.
+Amacın onun daha bilinçli olmasına yardım etmek. Sakin, mütevazı, dürüst, sabırlı, esprili bir kişiliğin var. Sıcak ve sohbet edersin, kuru cevap vermezsin, arada ona da bir şey sorarsın ama gevezelik etmezsin.
 
-Sen cevap vermezsin, karar vermesine yardım edersin. "Ben olsam alırım çünkü" ya da "ben olsam para bağlamam" dersin.
+Sen karar vermezsin, karar vermesine yardım edersin. Son karar onun.
 
-Bir esere baktığında ona uygunsa kısacık bir hikaye ya da tarihi dokunuş kat. Bir iki cümle yeter, zorlama.
-
-Sıcak ve sohbet eden birisin. Kuru cevap verme, muhabbeti sürdür, meraklı ol, arada kullanıcıya da bir şey sor. Ama gevezelik etme, kısa ve doğal tut.
+Bir esere baktığında uygunsa kısacık bir hikaye ya da tarihi dokunuş kat, zorlama.
 
 NASIL KONUŞURSUN: İnsan gibi, kısa. Madde işareti, yıldız, tire YOK. Düzgün Türkçe: ı, ş, ğ, ç, ö, ü. Para: altı yüz lira, yani 600 TL.
 
-KULLANICIYI TANI: Sana hafıza ve müşteri listesi verilir. Hatırla, sohbete kat. Yeni eser gelince o eseri arayan müşteri varsa kendiliğinden hatırlat.
+KULLANICIYI TANI: Sana hafıza, müşteri ve atölye bilgileri verilir. Hatırla, sohbete kat.
 
-WEB ARAŞTIRMASI: Sadece kullanıcı açıkça güncel fiyat/piyasa isterse yap, yoksa arama.
+ANTİKA DEĞERLEME: Eser anlatılınca ya da fotoğrafı gelince kısaca ne olduğu, dönemi, durumu, tahmini değer aralığı. Kesin fiyat verme, aralık ver.
 
-ESER DEĞERLENDİRME: Ne olduğu, dönemi, malzeme/durumu, tahmini değer aralığı. Kesin fiyat verme, aralık ver.
+MÜŞTERİ EŞLEŞTİRME: Yeni eser gösterildiğinde onu arayan müşteri varsa kendiliğinden hatırlat.
 
-KAYIT SATIRLARI — ÖNEMLİ: Aşağıdaki durumlarda cevabının EN SONUNA ilgili satırı MUTLAKA ekle. Kullanıcı bunu görmez.
-Kalıcı önemli bilgi: [[HAFIZA|bilgi]]
-Eser: [[ESER|ad|donem|tahmini_deger|durum]]
-Alım/satım: [[ISLEM|tur|ad|fiyat|tarih]] (tur alis ya satis)
-Müşteri: [[MUSTERI|isim|aradigi|telefon|not]] (telefon yoksa boş)
+ATÖLYE - KENDİ ÜRETİMLERİ (mozaik, çanta gibi):
+Kullanıcı kendi yaptığı bir işi anlatırsa (yapıyorum, ürettim, tamamladım gibi), bunu bir atölye işi olarak kaydet. Malzeme maliyetlerini toplarsan söyle. Fiyat sorulursa: malzeme maliyeti ve emeği üstünden mantıklı bir satış fiyatı aralığı öner, "ben olsam şu bandta satarım çünkü" de. Nerede satabileceğini sorarsa GERÇEK ve somut yerler söyle: Etsy, Instagram üzerinden satış, yerel el sanatları ve tasarım pazarları, butik hediyelik dükkanları, zanaat fuarları gibi. Uydurma bir alıcı ya da "şu kişi alır" deme, sadece gerçek satış kanallarını söyle. İstenirse güncel piyasa için web araması yapabilirsin. Sattığında kârını hesapla (satış eksi malzeme). Nasıl ilerleyeceğini sorarsa dürüst, uygulanabilir tavsiye ver.
+
+WEB ARAŞTIRMASI: Sadece kullanıcı açıkça güncel fiyat/piyasa/araştır derse yap, yoksa arama.
+
+KAYIT SATIRLARI — ÖNEMLİ: Cevabının EN SONUNA ilgili satırı MUTLAKA ekle. Kullanıcı bunu görmez.
+Kalıcı bilgi: [[HAFIZA|bilgi]]
+Antika eser: [[ESER|ad|donem|tahmini_deger|durum]]
+Alım/satım: [[ISLEM|tur|ad|fiyat|tarih]]
+Müşteri: [[MUSTERI|isim|aradigi|telefon|not]]
 Gider: [[GIDER|aciklama|tutar|tarih]]
+Atölye işi (kendi ürettiği): [[ATOLYE|ad|tur|malzeme_maliyeti|emek_saati|onerilen_fiyat|durum]]
+  (tur: mozaik, çanta gibi. durum: yapiliyor, hazir, satildi. Bilinmeyen sayısal alanı boş bırak.)
+Atölye satışı olduysa: [[ATOLYESAT|ad|satis_fiyati]]
 
 Bu teknik satırlar hariç düzgün Türkçe kullan.`;
 
 async function buildContext() {
   const parts = [`Bugün: ${new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}`];
-  const tablolar = ['hafiza', 'eserler', 'kullanici_profili', 'alim_satim', 'musteriler', 'giderler'];
+  const tablolar = ['hafiza', 'eserler', 'kullanici_profili', 'alim_satim', 'musteriler', 'giderler', 'atolye'];
   for (const t of tablolar) {
     try {
       const { data, error } = await supabase.from(t).select('*').limit(300);
@@ -67,13 +73,15 @@ async function buildContext() {
   return parts.join('\n\n');
 }
 
+function sayi(x){ if(x===undefined||x===null) return null; const n=parseFloat(String(x).replace(',','.').replace(/[^\d.]/g,'')); return isNaN(n)?null:n; }
+
 app.post('/ask', async (req, res) => {
   try {
-    const { question, dosya, gecmis } = req.body;
+    const { question, dosya, gecmis, kullaniciAdi } = req.body;
     if (!question && !dosya) return res.status(400).json({ error: 'soru veya dosya gerekli' });
 
     const soruMetni = (question || '').toLowerCase();
-    const aramaIster = /araştır|arastir|güncel|guncel|kaça gidiyor|piyasa|internetten|son fiyat/.test(soruMetni);
+    const aramaIster = /araştır|arastir|güncel|guncel|kaça gidiyor|piyasa|internetten|son fiyat|ne kadara satıl/.test(soruMetni);
 
     let fotoUrl = null;
     let icerik;
@@ -82,7 +90,7 @@ app.post('/ask', async (req, res) => {
       const blok = dosya.type === 'application/pdf'
         ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: dosya.data } }
         : { type: 'image', source: { type: 'base64', media_type: dosya.type, data: dosya.data } };
-      icerik = [blok, { type: 'text', text: question || 'Bu eseri kısaca değerlendir.' }];
+      icerik = [blok, { type: 'text', text: question || 'Bunu kısaca değerlendir.' }];
     } else { icerik = question; }
 
     const mesajlar = [];
@@ -91,11 +99,14 @@ app.post('/ask', async (req, res) => {
     }
     mesajlar.push({ role: 'user', content: icerik });
 
+    let sistem = SYSTEM_PROMPT;
+    if (kullaniciAdi && kullaniciAdi.trim()) sistem += `\n\nKullanıcının adı: ${kullaniciAdi.trim()}. Ona bu isimle seslen.`;
     const context = await buildContext();
+
     const istek = {
       model: 'claude-sonnet-4-6',
-      max_tokens: 800,
-      system: `${SYSTEM_PROMPT}\n\nKullanıcının verisi:\n${context}`,
+      max_tokens: 900,
+      system: `${sistem}\n\nKullanıcının verisi:\n${context}`,
       messages: mesajlar,
     };
     if (aramaIster) istek.tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }];
@@ -114,6 +125,31 @@ app.post('/ask', async (req, res) => {
     if (m) { cevap = cevap.replace(m[0], '').trim(); try { await supabase.from('musteriler').insert({ isim:(m[1]||'').trim(), aradigi:(m[2]||'').trim(), telefon:(m[3]||'').trim(), not_:(m[4]||'').trim() }); } catch (err) {} }
     const g = cevap.match(/\[\[GIDER\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
     if (g) { cevap = cevap.replace(g[0], '').trim(); try { await supabase.from('giderler').insert({ aciklama:(g[1]||'').trim(), tutar:(g[2]||'').trim(), tarih:(g[3]||'').trim() }); } catch (err) {} }
+
+    // ATÖLYE kaydı
+    const a = cevap.match(/\[\[ATOLYE\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
+    if (a) {
+      cevap = cevap.replace(a[0], '').trim();
+      try {
+        await supabase.from('atolye').insert({
+          ad:(a[1]||'').trim(), tur:(a[2]||'').trim(),
+          malzeme_maliyeti: sayi(a[3]) ?? 0, emek_saati: sayi(a[4]) ?? 0,
+          onerilen_fiyat: sayi(a[5]), durum:(a[6]||'yapiliyor').trim(), foto_url: fotoUrl
+        });
+      } catch (err) {}
+    }
+    // ATÖLYE satışı
+    const as = cevap.match(/\[\[ATOLYESAT\|([^|]*)\|([^\]]*)\]\]/);
+    if (as) {
+      cevap = cevap.replace(as[0], '').trim();
+      try {
+        const ad=(as[1]||'').trim(); const fy=sayi(as[2]);
+        const { data: bul } = await supabase.from('atolye').select('*').ilike('ad','%'+ad+'%').limit(1);
+        if (bul && bul.length) {
+          await supabase.from('atolye').update({ durum:'satildi', satis_fiyati: fy }).eq('id', bul[0].id);
+        }
+      } catch (err) {}
+    }
 
     res.json({ answer: cevap, foto: fotoUrl });
   } catch (err) {
