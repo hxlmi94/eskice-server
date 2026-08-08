@@ -60,7 +60,7 @@ Müşteri: [[MUSTERI|isim|aradigi|telefon|not]]
 Gider: [[GIDER|aciklama|tutar|tarih]]
 Atölye işi: [[ATOLYE|ad|tur|malzeme_maliyeti|emek_saati|onerilen_fiyat|durum]]
 Atölye satışı: [[ATOLYESAT|ad|satis_fiyati]]
-Borç/alacak: [[BORC|kisi|tutar|tur|aciklama]]  (tur: alacak = kişi sana borçlu, borc = sen borçlusun)
+Borç/alacak: [[BORC|kisi|tutar|tur|aciklama]]
 
 Bu teknik satırlar hariç düzgün Türkçe kullan.`;
 
@@ -99,6 +99,26 @@ app.post('/borc-ekle', async (req, res) => {
     });
     if (error) return res.status(500).json({ error: error.message });
     res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/gunun', async (req, res) => {
+  try {
+    const ad = (req.body && req.body.kullaniciAdi) ? String(req.body.kullaniciAdi).trim() : '';
+    const context = await buildContext();
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 320,
+      system: `Sen Eskice'sin, antikacı ve sanatçı ${ad||'kullanıcının'} yol arkadaşı. Kullanıcının verilerine bakarak iki kısa şey üret. Düzgün Türkçe, yıldız/tire/madde işareti YOK. Şu iki satırı tam bu formatta ver, başka hiçbir şey yazma:
+ONERI: (verilerine bakarak bugüne dair tek cümlelik sıcak, kişisel, işine yarar bir öneri. Örneğin bekleyen alacak, hedefe uzaklık, satılmamış eser, atölye işi gibi somut bir şeye değin. Veri yoksa nazik bir motivasyon.)
+BILGI: (antika, sanat, mozaik, dönem ya da bir usta hakkında tek cümlelik ilginç, kısa bir günün bilgisi. Her seferinde farklı olsun.)`,
+      messages: [{ role:'user', content: `Kullanıcının verisi:\n${context}\n\nBugün için ONERI ve BILGI üret.` }],
+    });
+    let t = message.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
+    let oneri='', bilgi='';
+    const mo = t.match(/ONERI:\s*(.+)/i); if(mo) oneri=mo[1].trim();
+    const mb = t.match(/BILGI:\s*(.+)/i); if(mb) bilgi=mb[1].trim();
+    res.json({ oneri, bilgi });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -155,7 +175,7 @@ app.post('/ask', async (req, res) => {
     const a = cevap.match(/\[\[ATOLYE\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
     if (a) { cevap = cevap.replace(a[0], '').trim(); try { await supabase.from('atolye').insert({ ad:(a[1]||'').trim(), tur:(a[2]||'').trim(), malzeme_maliyeti: sayi(a[3]) ?? 0, emek_saati: sayi(a[4]) ?? 0, onerilen_fiyat: sayi(a[5]), durum:(a[6]||'yapiliyor').trim(), foto_url: fotoUrl }); } catch (err) {} }
     const asat = cevap.match(/\[\[ATOLYESAT\|([^|]*)\|([^\]]*)\]\]/);
-    if (asat) { cevap = cevap.replace(asat[0], '').trim(); try { const ad=(asat[1]||'').trim(); const fy=sayi(asat[2]); const { data: bul } = await supabase.from('atolye').select('*').ilike('ad','%'+ad+'%').limit(1); if (bul && bul.length) await supabase.from('atolye').update({ durum:'satildi', satis_fiyati: fy }).eq('id', bul[0].id); } catch (err) {} }
+    if (asat) { cevap = cevap.replace(asat[0], '').trim(); try { const nm=(asat[1]||'').trim(); const fy=sayi(asat[2]); const { data: bul } = await supabase.from('atolye').select('*').ilike('ad','%'+nm+'%').limit(1); if (bul && bul.length) await supabase.from('atolye').update({ durum:'satildi', satis_fiyati: fy }).eq('id', bul[0].id); } catch (err) {} }
     const bc = cevap.match(/\[\[BORC\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
     if (bc) { cevap = cevap.replace(bc[0], '').trim(); try { await supabase.from('borc_alacak').insert({ kisi:(bc[1]||'').trim(), tutar: sayi(bc[2]) ?? 0, tur:(bc[3]||'alacak').trim(), aciklama:(bc[4]||'').trim() }); } catch (err) {} }
 
