@@ -24,9 +24,9 @@
   .ozet .et{font-size:12px;opacity:.9;margin-top:2px}
   .ekle{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:linear-gradient(160deg,#9a7238,#6e5323);color:var(--krem);border:none;border-radius:14px;padding:13px;font-family:'EB Garamond',serif;font-size:16px;cursor:pointer;margin-bottom:18px}
   .liste{display:flex;flex-direction:column;gap:10px}
-  .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;border-left:3px solid var(--yesil)}
+  .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;border-left:3px solid var(--yesil);cursor:pointer}
   .kart.borc{border-left-color:var(--kirmizi)}
-  .kart.odendi{opacity:.55}
+  .kart.odendi{opacity:.5}
   .kartic{flex:1}
   .kart .kisi{font-family:'Cormorant Garamond',serif;font-size:18px}
   .kart .acik{font-size:13px;color:var(--muted);font-style:italic}
@@ -37,7 +37,6 @@
   .islem button{background:none;border:none;cursor:pointer;font-size:16px;padding:2px}
   .bos{text-align:center;color:var(--muted);font-style:italic;padding:34px 16px;border:1px dashed var(--line);border-radius:14px}
   .yukleniyor{text-align:center;color:var(--muted);padding:34px;font-style:italic}
-  /* pencere */
   .perde{position:fixed;inset:0;background:rgba(50,35,15,.55);z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
   .pencere{background:#f7f0e0;border-radius:18px;padding:22px;width:100%;max-width:380px;border:1px solid var(--line)}
   .pencere h3{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--yazi);margin-bottom:14px;text-align:center}
@@ -48,6 +47,7 @@
   .pencere input{width:100%;background:#fffdf7;border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--yazi);font-family:'EB Garamond',serif;font-size:16px;margin-bottom:12px}
   .pbtn{width:100%;border:none;border-radius:11px;padding:13px;font-family:'EB Garamond',serif;font-size:16px;cursor:pointer;margin-bottom:8px}
   .pbtn.kaydet{background:linear-gradient(180deg,#a97c46,#8a6435);color:var(--krem)}
+  .pbtn.sil{background:rgba(155,74,56,.1);color:var(--kirmizi);border:1px solid #e0c3bb}
   .pbtn.kapat{background:none;color:var(--muted)}
   .durumyazi{text-align:center;color:var(--bronz2);font-style:italic;font-size:14px;min-height:18px;margin-bottom:6px}
 </style>
@@ -58,10 +58,90 @@
       <a class="geri" href="menu.html">‹</a>
       <div class="baslik">Borç & Alacak</div>
     </div>
-
     <div class="ozet">
-      <div class="kutu alacak"><div class="rakam" id="oAlacak">—</div><div class="et">Alacağın (sana borçlu)</div></div>
-      <div class="kutu borc"><div class="rakam" id="oBorc">—</div><div class="et">Borcun (sen borçlu)</div></div>
+      <div class="kutu alacak"><div class="rakam" id="oAlacak">—</div><div class="et">Alacağın</div></div>
+      <div class="kutu borc"><div class="rakam" id="oBorc">—</div><div class="et">Borcun</div></div>
     </div>
+    <button class="ekle" id="ekleBtn">+ Yeni Kayıt</button>
+    <div class="liste" id="liste"><div class="yukleniyor">Yükleniyor...</div></div>
+  </div>
 
-    <button class="ekle" id="ekleBtn">+
+  <div class="perde" id="perde">
+    <div class="pencere">
+      <h3>Borç / Alacak</h3>
+      <div class="secim">
+        <button id="secAlacak" class="aktif alacak">Bana borçlu</button>
+        <button id="secBorc">Ben borçluyum</button>
+      </div>
+      <input type="text" id="fKisi" placeholder="Kim? (isim)">
+      <input type="number" id="fTutar" placeholder="Ne kadar? (TL)">
+      <input type="text" id="fAcik" placeholder="Ne için? (isteğe bağlı)">
+      <div class="durumyazi" id="durumyazi"></div>
+      <button class="pbtn kaydet" id="kaydetBtn">Kaydet</button>
+      <button class="pbtn kapat" id="kapatBtn">Vazgeç</button>
+    </div>
+  </div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const SERVER='https://eskice-server.onrender.com';
+const supabase = createClient(
+  'https://mepfyrnmscrqbzxlbjyf.supabase.co',
+  'sb_publishable_QE5BnaX_nvb36agQ0t0GNw_wkASsY06'
+);
+const fmt=(n)=>(Number(n)||0).toLocaleString('tr-TR')+' TL';
+let seciliTur='alacak', kayitlar=[];
+
+async function yukle(){
+  const liste=document.getElementById('liste');
+  try{
+    const { data, error } = await supabase.from('borc_alacak').select('*').order('created_at',{ascending:false});
+    if(error) throw error;
+    kayitlar=data||[];
+    let tA=0,tB=0;
+    kayitlar.forEach(k=>{ if(!k.odendi){ if((k.tur||'')==='borc') tB+=Number(k.tutar)||0; else tA+=Number(k.tutar)||0; } });
+    document.getElementById('oAlacak').textContent=fmt(tA);
+    document.getElementById('oBorc').textContent=fmt(tB);
+    if(!kayitlar.length){ liste.innerHTML='<div class="bos">Henüz kayıt yok. Yeni Kayıt ile ekle.</div>'; return; }
+    liste.innerHTML=kayitlar.map(k=>{
+      const tur=(k.tur||'alacak')==='borc'?'borc':'alacak';
+      return '<div class="kart '+tur+(k.odendi?' odendi':'')+'"><div class="kartic" onclick="window.duzenle(\''+k.id+'\')">'+
+        '<div class="kisi">'+(k.kisi||'-')+'</div>'+(k.aciklama?'<div class="acik">'+k.aciklama+'</div>':'')+
+        '</div><div class="tutar">'+fmt(k.tutar)+'</div>'+
+        '<div class="islem"><button title="Ödendi" data-od="'+k.id+'">'+(k.odendi?'↩':'✓')+'</button>'+
+        '<button title="Sil" data-sil="'+k.id+'">🗑</button></div></div>';
+    }).join('');
+    liste.querySelectorAll('[data-od]').forEach(b=>{ b.onclick=async(ev)=>{ ev.stopPropagation(); const k=kayitlar.find(x=>x.id===b.dataset.od); try{ await supabase.from('borc_alacak').update({odendi:!k.odendi}).eq('id',b.dataset.od); yukle(); }catch(e){ alert('Bu işlem sunucudan yapılmalı'); } }; });
+    liste.querySelectorAll('[data-sil]').forEach(b=>{ b.onclick=async(ev)=>{ ev.stopPropagation(); if(!confirm('Silinsin mi?')) return; try{ await supabase.from('borc_alacak').delete().eq('id',b.dataset.sil); yukle(); }catch(e){ alert('Silme sunucudan yapılmalı'); } }; });
+  }catch(err){ liste.innerHTML='<div class="bos">Okunamadı: '+err.message+'</div>'; }
+}
+
+window.duzenle=(id)=>{}; // ileride düzenleme eklenebilir
+
+document.getElementById('ekleBtn').onclick=()=>{
+  seciliTur='alacak';
+  document.getElementById('secAlacak').classList.add('aktif'); document.getElementById('secBorc').classList.remove('aktif');
+  ['fKisi','fTutar','fAcik'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('durumyazi').textContent='';
+  document.getElementById('perde').style.display='flex';
+};
+document.getElementById('kapatBtn').onclick=()=>document.getElementById('perde').style.display='none';
+document.getElementById('secAlacak').onclick=()=>{ seciliTur='alacak'; document.getElementById('secAlacak').classList.add('aktif'); document.getElementById('secBorc').classList.remove('aktif'); };
+document.getElementById('secBorc').onclick=()=>{ seciliTur='borc'; document.getElementById('secBorc').classList.add('aktif'); document.getElementById('secAlacak').classList.remove('aktif'); };
+
+document.getElementById('kaydetBtn').onclick=async ()=>{
+  const kisi=document.getElementById('fKisi').value.trim();
+  const tutar=parseFloat(document.getElementById('fTutar').value)||0;
+  const aciklama=document.getElementById('fAcik').value.trim();
+  if(!kisi||!tutar){ document.getElementById('durumyazi').textContent='İsim ve tutar gerekli'; return; }
+  document.getElementById('durumyazi').textContent='Kaydediliyor...';
+  try{
+    await fetch(SERVER+'/borc-ekle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kisi,tutar,tur:seciliTur,aciklama})});
+    document.getElementById('perde').style.display='none'; yukle();
+  }catch(err){ document.getElementById('durumyazi').textContent='Olmadı, tekrar dene'; }
+};
+
+yukle();
+</script>
+</body>
+</html>
