@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#8a6435">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <style>
-  :root{--bronz:#8a6435;--bronz2:#6e5323;--yazi:#5f4623;--muted:#8a7a5f;--krem:#fbf5e9;--line:#d8c39c;--yesil:#5b7048;--mor:#7a5c8a}
+  :root{--bronz:#8a6435;--bronz2:#6e5323;--yazi:#5f4623;--muted:#8a7a5f;--krem:#fbf5e9;--line:#d8c39c;--yesil:#5b7048;--mor:#7a5c8a;--kirmizi:#9b4a38}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'EB Garamond',serif;color:var(--yazi);min-height:100vh;display:flex;justify-content:center;background:#e7d4ab url('https://hxlmi94.github.io/eskice-server/sohbet.png') center/cover fixed no-repeat}
   body::before{content:"";position:fixed;inset:0;background:rgba(242,233,210,.62);z-index:0}
@@ -21,7 +21,7 @@
   .ozet .kutu .et{font-size:11px;opacity:.85;margin-top:2px}
   .ekle{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:linear-gradient(160deg,#9a7238,#6e5323);color:var(--krem);border:none;border-radius:14px;padding:14px;font-family:'EB Garamond',serif;font-size:17px;cursor:pointer;margin-bottom:18px}
   .liste{display:flex;flex-direction:column;gap:12px}
-  .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:14px;overflow:hidden;border-left:3px solid var(--mor);display:flex;gap:12px}
+  .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:14px;overflow:hidden;border-left:3px solid var(--mor);display:flex;gap:12px;cursor:pointer}
   .kartfoto{width:92px;object-fit:cover;background:#e7dcc4;align-self:stretch}
   .kartfoto.yok{display:flex;align-items:center;justify-content:center;color:#b9a884;font-size:26px;min-height:100px}
   .kartic{padding:12px 14px;flex:1}
@@ -37,18 +37,17 @@
   .satBtn{margin-top:8px;margin-left:8px;background:rgba(122,92,138,.14);color:var(--mor);border:1px solid #d8cbe2;border-radius:20px;padding:3px 12px;font-family:'EB Garamond',serif;font-size:12px;cursor:pointer}
   .bos{text-align:center;color:var(--muted);font-style:italic;padding:40px 16px;border:1px dashed var(--line);border-radius:14px}
   .yukleniyor{text-align:center;color:var(--muted);padding:40px;font-style:italic}
-  /* pencere */
   .perde{position:fixed;inset:0;background:rgba(50,35,15,.55);z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
   .pencere{background:#f7f0e0;border-radius:18px;padding:22px;width:100%;max-width:400px;border:1px solid var(--line);max-height:92vh;overflow-y:auto}
-  .pencere h3{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--yazi);margin-bottom:14px;text-align:center}
-  .onizle{width:100%;max-height:200px;object-fit:contain;border-radius:12px;border:1px solid var(--line);margin-bottom:12px;display:none}
+  .pencere h3{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--yazi);margin-bottom:14px;text-align:center}
+  .onizle{width:100%;max-height:180px;object-fit:contain;border-radius:12px;border:1px solid var(--line);margin-bottom:12px;display:none}
   .fotosec{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:rgba(138,100,53,.1);color:var(--bronz2);border:1px dashed var(--line);border-radius:10px;padding:12px;font-family:'EB Garamond',serif;font-size:15px;cursor:pointer;margin-bottom:12px}
-  .pencere label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;letter-spacing:.3px}
+  .pencere label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
   .pencere input,.pencere select{width:100%;background:#fffdf7;border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--yazi);font-family:'EB Garamond',serif;font-size:16px;margin-bottom:12px}
-  .ikili{display:flex;gap:10px}
-  .ikili>div{flex:1}
+  .ikili{display:flex;gap:10px}.ikili>div{flex:1}
   .pbtn{width:100%;border:none;border-radius:11px;padding:13px;font-family:'EB Garamond',serif;font-size:16px;cursor:pointer;margin-bottom:8px}
   .pbtn.kaydet{background:linear-gradient(180deg,#a97c46,#8a6435);color:var(--krem)}
+  .pbtn.sil{background:rgba(155,74,56,.1);color:var(--kirmizi);border:1px solid #e0c3bb}
   .pbtn.kapat{background:none;color:var(--muted)}
   .durumyazi{text-align:center;color:var(--bronz2);font-style:italic;font-size:14px;min-height:20px;margin-bottom:6px}
 </style>
@@ -59,46 +58,34 @@
       <a class="geri" href="menu.html">‹</a>
       <div class="baslik">Atölye</div>
     </div>
-
     <div class="ozet" id="ozet" style="display:none">
       <div class="kutu"><div class="rakam" id="oIs">—</div><div class="et">İş</div></div>
       <div class="kutu"><div class="rakam" id="oMaliyet">—</div><div class="et">Maliyet</div></div>
       <div class="kutu"><div class="rakam" id="oKar">—</div><div class="et">Kâr</div></div>
     </div>
-
     <button class="ekle" id="ekleBtn">🎨 Yeni İş Ekle</button>
-
     <div class="liste" id="liste"><div class="yukleniyor">Yükleniyor...</div></div>
   </div>
 
-  <!-- Ekleme penceresi -->
+  <!-- Ekle/Düzenle penceresi (aynı pencere) -->
   <div class="perde" id="perde">
     <div class="pencere">
-      <h3>Yeni İş</h3>
+      <h3 id="pencereBaslik">Yeni İş</h3>
       <img class="onizle" id="onizle">
       <button class="fotosec" id="fotosecBtn">📷 Fotoğraf ekle</button>
       <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none">
-
-      <label>Ne yaptın?</label>
-      <input type="text" id="fAd" placeholder="örn: Akdeniz mavisi mozaik tabak">
-
-      <label>Türü</label>
-      <input type="text" id="fTur" placeholder="mozaik, çanta...">
-
+      <label>Ne yaptın?</label><input type="text" id="fAd" placeholder="örn: Akdeniz mavisi mozaik tabak">
+      <label>Türü</label><input type="text" id="fTur" placeholder="mozaik, çanta...">
       <div class="ikili">
         <div><label>Malzeme (TL)</label><input type="number" id="fMaliyet" placeholder="0"></div>
         <div><label>Emek (saat)</label><input type="number" id="fSaat" placeholder="0"></div>
       </div>
-
       <label>Durum</label>
-      <select id="fDurum">
-        <option value="yapiliyor">Yapılıyor</option>
-        <option value="hazir">Hazır</option>
-        <option value="satildi">Satıldı</option>
-      </select>
-
+      <select id="fDurum"><option value="yapiliyor">Yapılıyor</option><option value="hazir">Hazır</option><option value="satildi">Satıldı</option></select>
+      <div id="satisAlan" style="display:none"><label>Satış fiyatı (TL)</label><input type="number" id="fSatis" placeholder="0"></div>
       <div class="durumyazi" id="durumyazi"></div>
       <button class="pbtn kaydet" id="kaydetBtn">Kaydet</button>
+      <button class="pbtn sil" id="silBtn" style="display:none">Bu işi sil</button>
       <button class="pbtn kapat" id="kapatBtn">Vazgeç</button>
     </div>
   </div>
@@ -110,86 +97,82 @@ const supabase = createClient(
   'https://mepfyrnmscrqbzxlbjyf.supabase.co',
   'sb_publishable_QE5BnaX_nvb36agQ0t0GNw_wkASsY06'
 );
-const fmt = (n)=> (Number(n)||0).toLocaleString('tr-TR')+' TL';
-let seciliFoto=null, isler=[];
+const fmt=(n)=>(Number(n)||0).toLocaleString('tr-TR')+' TL';
+let seciliFoto=null, isler=[], duzenId=null;
 
 async function yukle(){
   const liste=document.getElementById('liste');
   try{
     const { data, error } = await supabase.from('atolye').select('*').order('created_at',{ascending:false});
     if(error) throw error;
-    isler = data || [];
-    if(!isler.length){
-      liste.innerHTML='<div class="bos">Henüz iş yok. Yeni İş Ekle ile başladığın çalışmayı ekle.</div>';
-      document.getElementById('ozet').style.display='none'; return;
-    }
+    isler=data||[];
+    if(!isler.length){ liste.innerHTML='<div class="bos">Henüz iş yok. Yeni İş Ekle ile başladığın çalışmayı ekle.</div>'; document.getElementById('ozet').style.display='none'; return; }
     let tMaliyet=0,tKar=0;
     isler.forEach(i=>{ tMaliyet+=Number(i.malzeme_maliyeti)||0; if((i.durum||'')==='satildi'&&i.satis_fiyati) tKar+=(Number(i.satis_fiyati)||0)-(Number(i.malzeme_maliyeti)||0); });
     document.getElementById('oIs').textContent=isler.length;
     document.getElementById('oMaliyet').textContent=fmt(tMaliyet);
     document.getElementById('oKar').textContent=fmt(tKar);
     document.getElementById('ozet').style.display='flex';
-
     const durumAd={yapiliyor:'yapılıyor',hazir:'hazır',satildi:'satıldı'};
     liste.innerHTML=isler.map(i=>{
       const durum=(i.durum||'yapiliyor').toLowerCase();
       const foto=i.foto_url?'<img class="kartfoto" src="'+i.foto_url+'">':'<div class="kartfoto yok">🎨</div>';
       let fiyatSatir='';
-      if(durum==='satildi'&&i.satis_fiyati){
-        const kar=(Number(i.satis_fiyati)||0)-(Number(i.malzeme_maliyeti)||0);
-        fiyatSatir='<div class="satir"><span>Satıldı: <b>'+fmt(i.satis_fiyati)+'</b></span><span class="kar">kâr '+fmt(kar)+'</span></div>';
-      } else if(i.onerilen_fiyat){
-        fiyatSatir='<div class="satir"><span>Önerilen: <b>'+fmt(i.onerilen_fiyat)+'</b></span></div>';
-      }
-      const satBtn = durum!=='satildi' ? '<button class="satBtn" data-id="'+i.id+'" data-ad="'+(i.ad||'')+'">Sattım</button>' : '';
-      return '<div class="kart">'+foto+'<div class="kartic">'+
-        '<div class="ad">'+(i.ad||'-')+'</div>'+
-        (i.tur?'<div class="tur">'+i.tur+'</div>':'')+
+      if(durum==='satildi'&&i.satis_fiyati){ const kar=(Number(i.satis_fiyati)||0)-(Number(i.malzeme_maliyeti)||0); fiyatSatir='<div class="satir"><span>Satıldı: <b>'+fmt(i.satis_fiyati)+'</b></span><span class="kar">kâr '+fmt(kar)+'</span></div>'; }
+      else if(i.onerilen_fiyat){ fiyatSatir='<div class="satir"><span>Önerilen: <b>'+fmt(i.onerilen_fiyat)+'</b></span></div>'; }
+      const satBtn = durum!=='satildi' ? '<button class="satBtn" onclick="event.stopPropagation();window.satPrompt(\''+i.id+'\',\''+(i.ad||'').replace(/'/g,"")+'\')">Sattım</button>' : '';
+      return '<div class="kart" onclick="window.duzenle(\''+i.id+'\')">'+foto+'<div class="kartic">'+
+        '<div class="ad">'+(i.ad||'-')+'</div>'+(i.tur?'<div class="tur">'+i.tur+'</div>':'')+
         '<div class="satir"><span>Malzeme: <b>'+fmt(i.malzeme_maliyeti)+'</b></span>'+(i.emek_saati?'<span>'+i.emek_saati+' saat</span>':'')+'</div>'+
-        fiyatSatir+
-        '<span class="durumr '+durum+'">'+(durumAd[durum]||durum)+'</span>'+satBtn+
-        '</div></div>';
+        fiyatSatir+'<span class="durumr '+durum+'">'+(durumAd[durum]||durum)+'</span>'+satBtn+'</div></div>';
     }).join('');
-
-    liste.querySelectorAll('.satBtn').forEach(b=>{
-      b.onclick=async ()=>{
-        const fy=prompt('"'+b.dataset.ad+'" kaça satıldı? (sadece rakam)');
-        if(fy===null) return;
-        const n=parseFloat(String(fy).replace(',','.').replace(/[^\d.]/g,''));
-        try{ await supabase.from('atolye').update({durum:'satildi',satis_fiyati:isNaN(n)?null:n}).eq('id',b.dataset.id); yukle(); }
-        catch(e){ alert('Olmadı'); }
-      };
-    });
   }catch(err){ liste.innerHTML='<div class="bos">Okunamadı: '+err.message+'</div>'; }
 }
 
-// pencere aç/kapa
+window.satPrompt=async (id,ad)=>{
+  const fy=prompt('"'+ad+'" kaça satıldı? (sadece rakam)'); if(fy===null) return;
+  try{ await fetch(SERVER+'/atolye-guncelle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,durum:'satildi',satis_fiyati:fy})}); yukle(); }catch(e){ alert('Olmadı'); }
+};
+
+function durumSatisGoster(){ document.getElementById('satisAlan').style.display = document.getElementById('fDurum').value==='satildi' ? 'block':'none'; }
+document.getElementById('fDurum').onchange=durumSatisGoster;
+
 document.getElementById('ekleBtn').onclick=()=>{
-  seciliFoto=null;
+  duzenId=null; seciliFoto=null;
+  document.getElementById('pencereBaslik').textContent='Yeni İş';
   document.getElementById('onizle').style.display='none';
-  ['fAd','fTur','fMaliyet','fSaat'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('fDurum').value='yapiliyor';
+  ['fAd','fTur','fMaliyet','fSaat','fSatis'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fDurum').value='yapiliyor'; durumSatisGoster();
+  document.getElementById('silBtn').style.display='none';
   document.getElementById('durumyazi').textContent='';
   document.getElementById('perde').style.display='flex';
 };
-document.getElementById('kapatBtn').onclick=()=>{ document.getElementById('perde').style.display='none'; };
+window.duzenle=(id)=>{
+  const i=isler.find(x=>String(x.id)===String(id)); if(!i) return;
+  duzenId=id; seciliFoto=null;
+  document.getElementById('pencereBaslik').textContent='İşi Düzenle';
+  document.getElementById('onizle').style.display='none';
+  document.getElementById('fAd').value=i.ad||'';
+  document.getElementById('fTur').value=i.tur||'';
+  document.getElementById('fMaliyet').value=i.malzeme_maliyeti||'';
+  document.getElementById('fSaat').value=i.emek_saati||'';
+  document.getElementById('fDurum').value=(i.durum||'yapiliyor');
+  document.getElementById('fSatis').value=i.satis_fiyati||'';
+  durumSatisGoster();
+  document.getElementById('silBtn').style.display='block';
+  document.getElementById('durumyazi').textContent='';
+  document.getElementById('perde').style.display='flex';
+};
+document.getElementById('kapatBtn').onclick=()=>document.getElementById('perde').style.display='none';
 
 document.getElementById('fotosecBtn').onclick=()=>document.getElementById('fotoInput').click();
-document.getElementById('fotoInput').onchange=(ev)=>{
-  const f=ev.target.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=()=>{ seciliFoto={data:r.result.split(',')[1],type:f.type};
-    document.getElementById('onizle').src=r.result; document.getElementById('onizle').style.display='block'; };
-  r.readAsDataURL(f);
-};
+document.getElementById('fotoInput').onchange=(ev)=>{ const f=ev.target.files[0]; if(!f) return; const r=new FileReader();
+  r.onload=()=>{ seciliFoto={data:r.result.split(',')[1],type:f.type}; document.getElementById('onizle').src=r.result; document.getElementById('onizle').style.display='block'; }; r.readAsDataURL(f); };
 
 async function fotoYukleStorage(){
   if(!seciliFoto) return null;
-  try{
-    const ad='eser_'+Date.now()+'.'+((seciliFoto.type||'').includes('png')?'png':'jpg');
-    const buf=Uint8Array.from(atob(seciliFoto.data),c=>c.charCodeAt(0));
-    const { error } = await supabase.storage.from('fotograflar').upload(ad,buf,{contentType:seciliFoto.type||'image/jpeg'});
-    if(error) return null;
+  try{ const ad='eser_'+Date.now()+'.'+((seciliFoto.type||'').includes('png')?'png':'jpg'); const buf=Uint8Array.from(atob(seciliFoto.data),c=>c.charCodeAt(0));
+    const { error }=await supabase.storage.from('fotograflar').upload(ad,buf,{contentType:seciliFoto.type||'image/jpeg'}); if(error) return null;
     return 'https://mepfyrnmscrqbzxlbjyf.supabase.co/storage/v1/object/public/fotograflar/'+ad;
   }catch(e){ return null; }
 }
@@ -198,17 +181,20 @@ document.getElementById('kaydetBtn').onclick=async ()=>{
   const ad=document.getElementById('fAd').value.trim();
   if(!ad){ document.getElementById('durumyazi').textContent='Önce ne yaptığını yaz'; return; }
   document.getElementById('durumyazi').textContent='Kaydediliyor...';
-  const foto_url=await fotoYukleStorage();
-  const maliyet=parseFloat(document.getElementById('fMaliyet').value)||0;
-  const saat=parseFloat(document.getElementById('fSaat').value)||0;
-  const durum=document.getElementById('fDurum').value;
-  const tur=document.getElementById('fTur').value.trim();
+  const veri={ ad, tur:document.getElementById('fTur').value.trim(), malzeme_maliyeti:parseFloat(document.getElementById('fMaliyet').value)||0,
+    emek_saati:parseFloat(document.getElementById('fSaat').value)||0, durum:document.getElementById('fDurum').value };
+  if(veri.durum==='satildi') veri.satis_fiyati=parseFloat(document.getElementById('fSatis').value)||0;
   try{
-    // yazma sunucu üstünden değil; atolye tablosuna doğrudan yazım RLS ile kapalı olabilir,
-    // o yüzden sunucudaki /atolye-ekle ucunu kullanıyoruz
-    const r=await fetch(SERVER+'/atolye-ekle',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ad,tur,malzeme_maliyeti:maliyet,emek_saati:saat,durum,foto_url})});
-    if(!r.ok) throw new Error('sunucu');
+    if(duzenId){ await fetch(SERVER+'/atolye-guncelle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:duzenId,...veri})}); }
+    else { const foto_url=await fotoYukleStorage(); await fetch(SERVER+'/atolye-ekle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...veri,foto_url})}); }
+    document.getElementById('perde').style.display='none'; yukle();
+  }catch(err){ document.getElementById('durumyazi').textContent='Olmadı, tekrar dene'; }
+};
+
+document.getElementById('silBtn').onclick=async ()=>{
+  if(!confirm('Bu iş silinsin mi?')) return;
+  document.getElementById('durumyazi').textContent='Siliniyor...';
+  try{ await fetch(SERVER+'/atolye-sil',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:duzenId})});
     document.getElementById('perde').style.display='none'; yukle();
   }catch(err){ document.getElementById('durumyazi').textContent='Olmadı, tekrar dene'; }
 };
