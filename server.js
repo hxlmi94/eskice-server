@@ -64,6 +64,8 @@ Atölye işi: [[ATOLYE|ad|tur|malzeme_maliyeti|emek_saati|onerilen_fiyat|durum]]
 Atölye satışı: [[ATOLYESAT|ad|satis_fiyati]]
 Borç/alacak: [[BORC|kisi|tutar|tur|aciklama]]
 
+MÜŞTERİ BULDU: Bir satış yaptığında, o ürünü arayan bir müşteri varsa kullanıcıya sor: bunu o müşteriye mi sattın diye. Kullanıcı evet derse cevabının sonuna ekle: [[MUSTERIBULDU|isim]]
+
 Bu teknik satırlar hariç düzgün Türkçe kullan.`;
 
 async function buildContext() {
@@ -143,6 +145,7 @@ app.post('/musteri-guncelle', async (req, res) => {
   try { const b=req.body||{}; const a={};
     if(b.isim!==undefined)a.isim=(b.isim||'').trim(); if(b.aradigi!==undefined)a.aradigi=(b.aradigi||'').trim();
     if(b.telefon!==undefined)a.telefon=(b.telefon||'').trim(); if(b.not_!==undefined)a.not_=(b.not_||'').trim();
+    if(b.buldu!==undefined)a.buldu=!!b.buldu;
     const { error }=await supabase.from('musteriler').update(a).eq('id',b.id);
     if(error) return res.status(500).json({error:error.message}); res.json({ok:true});
   } catch(err){ res.status(500).json({error:err.message}); }
@@ -222,6 +225,8 @@ app.post('/ask', async (req, res) => {
     if (asat) { cevap = cevap.replace(asat[0], '').trim(); try { const nm=(asat[1]||'').trim(); const fy=sayi(asat[2]); const { data: bul } = await supabase.from('atolye').select('*').ilike('ad','%'+nm+'%').limit(1); if (bul && bul.length) await supabase.from('atolye').update({ durum:'satildi', satis_fiyati: fy }).eq('id', bul[0].id); } catch (err) {} }
     const bc = cevap.match(/\[\[BORC\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
     if (bc) { cevap = cevap.replace(bc[0], '').trim(); try { await supabase.from('borc_alacak').insert({ kisi:(bc[1]||'').trim(), tutar: sayi(bc[2]) ?? 0, tur:(bc[3]||'alacak').trim(), aciklama:(bc[4]||'').trim() }); } catch (err) {} }
+    const mbd = cevap.match(/\[\[MUSTERIBULDU\|([^\]]*)\]\]/);
+    if (mbd) { cevap = cevap.replace(mbd[0], '').trim(); try { const nm=(mbd[1]||'').trim(); const { data: bul } = await supabase.from('musteriler').select('*').ilike('isim','%'+nm+'%').limit(1); if (bul && bul.length) await supabase.from('musteriler').update({ buldu:true }).eq('id', bul[0].id); } catch (err) {} }
 
     res.json({ answer: cevap, foto: fotoUrl });
   } catch (err) { console.error(err); res.status(500).json({ error: err.message }); }
