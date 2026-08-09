@@ -4,32 +4,46 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Müşteriler — Eskice</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#8a6435">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <style>
-  :root{--bronz:#8a6435;--bronz2:#6e5323;--yazi:#5f4623;--muted:#8a7a5f;--krem:#fbf5e9;--line:#d8c39c;--yesil:#4a7a4a}
+  :root{--bronz:#8a6435;--bronz2:#6e5323;--yazi:#5f4623;--muted:#8a7a5f;--krem:#fbf5e9;--line:#d8c39c;--yesil:#4a7a4a;--kirmizi:#9b4a38}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'EB Garamond',serif;color:var(--yazi);min-height:100vh;display:flex;justify-content:center;background:#e7d4ab url('https://hxlmi94.github.io/eskice-server/sohbet.png') center/cover fixed no-repeat}
   body::before{content:"";position:fixed;inset:0;background:rgba(242,233,210,.62);z-index:0}
   .ekran{position:relative;z-index:1;width:100%;max-width:480px;min-height:100vh;padding:20px 22px 40px;background:rgba(247,240,224,.35);border-left:1px solid rgba(138,100,53,.18);border-right:1px solid rgba(138,100,53,.18)}
-  .ust{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .ust{display:flex;align-items:center;gap:12px;margin-bottom:14px}
   .geri{text-decoration:none;color:var(--bronz);font-size:28px;line-height:1}
   .baslik{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--yazi);letter-spacing:1px}
-  .sayi{font-size:14px;color:var(--muted);font-style:italic;margin-bottom:18px;margin-left:40px}
+  .ekle{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:linear-gradient(160deg,#9a7238,#6e5323);color:var(--krem);border:none;border-radius:14px;padding:13px;font-family:'EB Garamond',serif;font-size:16px;cursor:pointer;margin-bottom:16px}
+  .sayi{font-size:14px;color:var(--muted);font-style:italic;margin-bottom:14px}
   .liste{display:flex;flex-direction:column;gap:11px}
   .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start}
-  .avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(160deg,#b98f4e,#8a6435);color:var(--krem);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:20px;flex-shrink:0}
+  .avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(160deg,#b98f4e,#8a6435);color:var(--krem);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:20px;flex-shrink:0;cursor:pointer}
   .govde{flex:1;min-width:0}
-  .kart .isim{font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--yazi)}
+  .kart .isim{font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--yazi);cursor:pointer}
   .kart .ariyor{font-size:14px;color:var(--bronz2);margin-top:2px}
   .kart .ariyor b{font-weight:500}
   .kart .not{font-size:13px;color:var(--muted);font-style:italic;margin-top:3px}
-  .butonlar{display:flex;gap:8px;margin-top:10px}
-  .bt{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-size:13px;padding:6px 14px;border-radius:20px;border:1px solid var(--line)}
+  .butonlar{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .bt{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-size:13px;padding:6px 14px;border-radius:20px;border:1px solid var(--line);cursor:pointer;background:none;font-family:'EB Garamond',serif}
   .bt.ara{background:rgba(138,100,53,.1);color:var(--bronz2)}
   .bt.wp{background:rgba(74,122,74,.12);color:var(--yesil)}
+  .bt.duzen{background:rgba(138,100,53,.06);color:var(--muted)}
   .telyok{font-size:12px;color:var(--muted);font-style:italic;margin-top:8px}
   .bos{text-align:center;color:var(--muted);font-style:italic;padding:40px 16px;border:1px dashed var(--line);border-radius:14px}
   .yukleniyor{text-align:center;color:var(--muted);padding:40px;font-style:italic}
+  .perde{position:fixed;inset:0;background:rgba(50,35,15,.55);z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
+  .pencere{background:#f7f0e0;border-radius:18px;padding:22px;width:100%;max-width:400px;border:1px solid var(--line);max-height:92vh;overflow-y:auto}
+  .pencere h3{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--yazi);margin-bottom:14px;text-align:center}
+  .pencere label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+  .pencere input{width:100%;background:#fffdf7;border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--yazi);font-family:'EB Garamond',serif;font-size:16px;margin-bottom:12px}
+  .pbtn{width:100%;border:none;border-radius:11px;padding:13px;font-family:'EB Garamond',serif;font-size:16px;cursor:pointer;margin-bottom:8px}
+  .pbtn.kaydet{background:linear-gradient(180deg,#a97c46,#8a6435);color:var(--krem)}
+  .pbtn.sil{background:rgba(155,74,56,.1);color:var(--kirmizi);border:1px solid #e0c3bb}
+  .pbtn.kapat{background:none;color:var(--muted)}
+  .durumyazi{text-align:center;color:var(--bronz2);font-style:italic;font-size:14px;min-height:18px;margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -38,57 +52,106 @@
       <a class="geri" href="menu.html">‹</a>
       <div class="baslik">Müşteriler</div>
     </div>
+    <button class="ekle" id="ekleBtn">+ Yeni Müşteri</button>
     <div class="sayi" id="sayi"></div>
     <div class="liste" id="liste"><div class="yukleniyor">Yükleniyor...</div></div>
   </div>
 
+  <div class="perde" id="perde">
+    <div class="pencere">
+      <h3 id="pencereBaslik">Müşteri</h3>
+      <label>İsim</label><input type="text" id="mIsim" placeholder="İsim">
+      <label>Ne arıyor?</label><input type="text" id="mAradigi" placeholder="örn: gümüş tepsi">
+      <label>Telefon</label><input type="text" id="mTelefon" placeholder="05xx xxx xx xx">
+      <label>Not</label><input type="text" id="mNot" placeholder="isteğe bağlı">
+      <div class="durumyazi" id="durumyazi"></div>
+      <button class="pbtn kaydet" id="kaydetBtn">Kaydet</button>
+      <button class="pbtn sil" id="silBtn" style="display:none">Bu müşteriyi sil</button>
+      <button class="pbtn kapat" id="kapatBtn">Vazgeç</button>
+    </div>
+  </div>
+
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const SERVER='https://eskice-server.onrender.com';
 const supabase = createClient(
   'https://mepfyrnmscrqbzxlbjyf.supabase.co',
   'sb_publishable_QE5BnaX_nvb36agQ0t0GNw_wkASsY06'
 );
-
+let musteriler=[], duzenId=null;
 function temizTel(t){ return String(t||'').replace(/[^\d+]/g,''); }
-function wpTel(t){
-  let n = String(t||'').replace(/\D/g,'');
-  if(n.startsWith('0')) n = '90'+n.slice(1);
-  else if(!n.startsWith('90') && n.length===10) n = '90'+n;
-  return n;
-}
+function wpTel(t){ let n=String(t||'').replace(/\D/g,''); if(n.startsWith('0'))n='90'+n.slice(1); else if(!n.startsWith('90')&&n.length===10)n='90'+n; return n; }
 
 async function yukle(){
-  const liste = document.getElementById('liste');
+  const liste=document.getElementById('liste');
   try{
     const { data, error } = await supabase.from('musteriler').select('*').order('created_at',{ascending:false});
     if(error) throw error;
-    if(!data || !data.length){
-      liste.innerHTML='<div class="bos">Henüz müşteri yok. Eskice ile konuşurken bir müşteriden ve numarasından bahsettiğinde buraya düşer.</div>';
-      document.getElementById('sayi').textContent=''; return;
-    }
-    document.getElementById('sayi').textContent = data.length + ' müşteri';
-    liste.innerHTML = data.map(m=>{
-      const harf = (m.isim||'?').trim().charAt(0).toUpperCase();
-      const tel = (m.telefon||'').trim();
-      let butonlar = '';
+    musteriler=data||[];
+    if(!musteriler.length){ liste.innerHTML='<div class="bos">Henüz müşteri yok. Yeni Müşteri ile ekle ya da Eskice ile konuşurken bahset.</div>'; document.getElementById('sayi').textContent=''; return; }
+    document.getElementById('sayi').textContent=musteriler.length+' müşteri';
+    liste.innerHTML=musteriler.map(m=>{
+      const harf=(m.isim||'?').trim().charAt(0).toUpperCase();
+      const tel=(m.telefon||'').trim();
+      let btns='<div class="butonlar">';
       if(tel){
-        butonlar = '<div class="butonlar">'+
-          '<a class="bt ara" href="tel:'+temizTel(tel)+'">📞 Ara</a>'+
-          '<a class="bt wp" href="https://wa.me/'+wpTel(tel)+'" target="_blank">💬 WhatsApp</a>'+
-          '</div>';
-      } else {
-        butonlar = '<div class="telyok">numara yok</div>';
+        btns+='<a class="bt ara" href="tel:'+temizTel(tel)+'">📞 Ara</a>';
+        btns+='<a class="bt wp" href="https://wa.me/'+wpTel(tel)+'" target="_blank">💬 WhatsApp</a>';
       }
-      return '<div class="kart"><div class="avatar">'+harf+'</div><div class="govde">'+
-        '<div class="isim">'+(m.isim||'Müşteri')+'</div>'+
+      btns+='<button class="bt duzen" onclick="window.duzenle(\''+m.id+'\')">✎ Düzenle</button>';
+      btns+='</div>';
+      return '<div class="kart"><div class="avatar" onclick="window.duzenle(\''+m.id+'\')">'+harf+'</div><div class="govde">'+
+        '<div class="isim" onclick="window.duzenle(\''+m.id+'\')">'+(m.isim||'Müşteri')+'</div>'+
         (m.aradigi?'<div class="ariyor">arıyor: <b>'+m.aradigi+'</b></div>':'')+
         (m.not_?'<div class="not">'+m.not_+'</div>':'')+
-        butonlar+'</div></div>';
+        (tel?'':'<div class="telyok">numara yok</div>')+
+        btns+'</div></div>';
     }).join('');
-  }catch(err){
-    liste.innerHTML='<div class="bos">Okunamadı: '+err.message+'</div>';
-  }
+  }catch(err){ liste.innerHTML='<div class="bos">Okunamadı: '+err.message+'</div>'; }
 }
+
+document.getElementById('ekleBtn').onclick=()=>{
+  duzenId=null;
+  document.getElementById('pencereBaslik').textContent='Yeni Müşteri';
+  ['mIsim','mAradigi','mTelefon','mNot'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('silBtn').style.display='none';
+  document.getElementById('durumyazi').textContent='';
+  document.getElementById('perde').style.display='flex';
+};
+window.duzenle=(id)=>{
+  const m=musteriler.find(x=>String(x.id)===String(id)); if(!m) return;
+  duzenId=id;
+  document.getElementById('pencereBaslik').textContent='Müşteriyi Düzenle';
+  document.getElementById('mIsim').value=m.isim||'';
+  document.getElementById('mAradigi').value=m.aradigi||'';
+  document.getElementById('mTelefon').value=m.telefon||'';
+  document.getElementById('mNot').value=m.not_||'';
+  document.getElementById('silBtn').style.display='block';
+  document.getElementById('durumyazi').textContent='';
+  document.getElementById('perde').style.display='flex';
+};
+document.getElementById('kapatBtn').onclick=()=>document.getElementById('perde').style.display='none';
+
+document.getElementById('kaydetBtn').onclick=async ()=>{
+  const isim=document.getElementById('mIsim').value.trim();
+  if(!isim){ document.getElementById('durumyazi').textContent='İsim gerekli'; return; }
+  const veri={ isim, aradigi:document.getElementById('mAradigi').value.trim(), telefon:document.getElementById('mTelefon').value.trim(), not_:document.getElementById('mNot').value.trim() };
+  document.getElementById('durumyazi').textContent='Kaydediliyor...';
+  try{
+    if(duzenId){ await fetch(SERVER+'/musteri-guncelle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:duzenId,...veri})}); }
+    else { await fetch(SERVER+'/musteri-ekle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(veri)}); }
+    document.getElementById('perde').style.display='none'; yukle();
+  }catch(err){ document.getElementById('durumyazi').textContent='Olmadı, tekrar dene'; }
+};
+
+document.getElementById('silBtn').onclick=async ()=>{
+  if(!confirm('Bu müşteri silinsin mi?')) return;
+  document.getElementById('durumyazi').textContent='Siliniyor...';
+  try{ await fetch(SERVER+'/musteri-sil',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:duzenId})});
+    document.getElementById('perde').style.display='none'; yukle();
+  }catch(err){ document.getElementById('durumyazi').textContent='Olmadı, tekrar dene'; }
+};
+
 yukle();
 </script>
 </body>
