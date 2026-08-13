@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>İlham — Eskice</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#8a6435">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{--bronz:#8a6435;--bronz2:#6e5323;--yazi:#5f4623;--muted:#8a7a5f;--krem:#fbf5e9;--line:#d8c39c;--yesil:#5b7048;--gul:#a8577a}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'EB Garamond',serif;color:var(--yazi);min-height:100vh;display:flex;justify-content:center;background:#e7d4ab url('https://hxlmi94.github.io/eskice-server/sohbet.png') center/cover fixed no-repeat}
+  body::before{content:"";position:fixed;inset:0;background:rgba(242,233,210,.62);z-index:0}
+  .ekran{position:relative;z-index:1;width:100%;max-width:480px;min-height:100vh;padding:20px 22px 40px;background:rgba(247,240,224,.35);border-left:1px solid rgba(138,100,53,.18);border-right:1px solid rgba(138,100,53,.18)}
+  .ust{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  .geri{text-decoration:none;color:var(--bronz);font-size:28px;line-height:1}
+  .baslik{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--yazi);letter-spacing:1px}
+  .altyazi{font-size:13px;color:var(--muted);font-style:italic;margin-bottom:16px;margin-left:40px}
+  .ekle{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:linear-gradient(160deg,#a86a88,#7a4560);color:var(--krem);border:none;border-radius:14px;padding:14px;font-family:'EB Garamond',serif;font-size:17px;cursor:pointer;margin-bottom:18px}
+  .liste{display:flex;flex-direction:column;gap:12px}
+  .kart{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:14px;overflow:hidden;border-left:3px solid var(--gul);display:flex;gap:12px;cursor:pointer}
+  .kartfoto{width:88px;object-fit:cover;background:#e7dcc4;align-self:stretch}
+  .kartfoto.yok{display:flex;align-items:center;justify-content:center;color:#c9a6b8;font-size:24px;min-height:90px}
+  .kartic{padding:12px 14px;flex:1}
+  .kart .bas{font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--yazi)}
+  .kart .notu{font-size:14px;color:var(--muted);margin-top:4px;line-height:1.4}
+  .kart .ilhamr{font-size:13px;color:var(--gul);font-style:italic;margin-top:6px;line-height:1.4;border-top:1px dashed rgba(168,87,122,.3);padding-top:6px}
+  .durumr{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;margin-top:8px}
+  .durumr.fikir{background:#efe6d4;color:var(--bronz2)}
+  .durumr.deneniyor{background:#f0e0ea;color:var(--gul)}
+  .durumr.tamamlandi{background:#e6efe0;color:var(--yesil)}
+  .bos{text-align:center;color:var(--muted);font-style:italic;padding:40px 16px;border:1px dashed var(--line);border-radius:14px;line-height:1.6}
+  .yukleniyor{text-align:center;color:var(--muted);padding:40px;font-style:italic}
+  .perde{position:fixed;inset:0;background:rgba(50,35,15,.55);z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
+  .pencere{background:#f7f0e0;border-radius:18px;padding:22px;width:100%;max-width:400px;border:1px solid var(--line);max-height:92vh;overflow-y:auto}
+  .pencere h3{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--yazi);margin-bottom:14px;text-align:center}
+  .onizle{width:100%;max-height:180px;object-fit:contain;border-radius:12px;border:1px solid var(--line);margin-bottom:12px;display:none}
+  .fotosec{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:rgba(168,87,122,.1);color:var(--gul);border:1px dashed var(--line);border-radius:10px;padding:12px;font-family:'EB Garamond',serif;font-size:15px;cursor:pointer;margin-bottom:12px}
+  .pencere label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+  .pencere input,.pencere textarea,.pencere select{width:100%;background:#fffdf7;border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--yazi);font-family:'EB Garamond',serif;font-size:16px;margin-bottom:12px}
+  .pencere textarea{resize:vertical;min-height:60px}
+  .pbtn{width:100%;border:none;border-radius:11px;padding:13px;font-family:'EB Garamond',serif;font-size:16px;cursor:pointer;margin-bottom:8px}
+  .pbtn.kaydet{background:linear-gradient(180deg,#a86a88,#7a4560);color:var(--krem)}
+  .pbtn.sil{background:rgba(155,74,56,.1);color:#9b4a38;border:1px solid #e0c3bb}
+  .pbtn.kapat{background:none;color:var(--muted)}
+  .durumyazi{text-align:center;color:var(--bronz2);font-style:italic;font-size:14px;min-height:20px;margin-bottom:6px}
+</style>
+</head>
+<body>
+  <div class="ekran">
+    <div class="ust">
+      <a class="geri" href="menu.html">‹</a>
+      <div class="baslik">İlham</div>
+    </div>
+    <div class="altyazi">Fikirlerin, eskizlerin, geçmişi bugüne taşıyan tasarımların.</div>
+
+    <button class="ekle" id="ekleBtn">✦ Yeni İlham</button>
+    <div class="liste" id="liste"><div class="yukleniyor">Yükleniyor...</div></div>
+  </div>
+
+  <div class="perde" id="perde">
+    <div class="pencere">
+      <h3 id="pencereBaslik">Yeni İlham</h3>
+      <img class="onizle" id="onizle">
+      <button class="fotosec" id="fotosecBtn">🎨 Eskiz/görsel ekle</button>
+      <input type="file" id="fotoInput" accept="image/*" style="display:none">
+      <label>Fikir / başlık</label>
+      <input type="text" id="fBaslik" placeholder="örn: Osmanlı lale motifi → deri çanta">
+      <label>Notun</label>
+      <textarea id="fNot" placeholder="Ne düşünüyorsun? Nasıl bir şey olsun?"></textarea>
+      <label>Eskice'nin ilhamı (varsa)</label>
+      <textarea id="fIlham" placeholder="Eskice ile konuşurken çıkan bir fikir varsa buraya yapıştır"></textarea>
+      <label>Durum</label>
+      <select id="fDurum">
+        <option value="fikir">Fikir</option>
+        <option value="deneniyor">Deneniyor</option>
+        <option value="tamamlandi">Tamamlandı</option>
+      </select>
+      <div class="durumyazi" id="durumyazi"></div>
+      <button class="pbtn kaydet" id="kaydetBtn">Kaydet</button>
+      <button class="pbtn sil" id="silBtn" style="display:none">Bu ilhamı sil</button>
+      <button class="pbtn kapat" id="kapatBtn">Vazgeç</button>
+    </div>
+  </div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const SERVER='https://eskice-server.onrender.com';
+const supabase = createClient(
+  'https://mepfyrnmscrqbzxlbjyf.supabase.co',
+  'sb_publishable_QE5BnaX_nvb36agQ0t0GNw_wkASsY06'
+);
+let ilhamlar=[], duzenId=null, seciliFoto=null;
+
+async function yukle(){
+  const liste=document.getElementById('liste');
+  try{
+    const { data, error } = await supabase.from('ilham').select('*').order('created_at',{ascending:false});
+    if(error) throw error;
+    ilhamlar=data||[];
+    if(!ilhamlar.length){ liste.innerHTML='<div class="bos">Henüz ilham yok. ✦ Yeni İlham ile bir fikrini, eskizini ya da Eskice ile çıkan bir düşünceyi kaydet.</div>'; return; }
+    const durumAd={fikir:'fikir',deneniyor:'deneniyor',tamamlandi:'tamamlandı'};
+    liste.innerHTML=ilhamlar.map(i=>{
+      const durum=(i.durum||'fikir').toLowerCase();
+      const foto=i.foto_url?'<img class="kartfoto" src="'+i.foto_url+'">':'<div class="kartfoto yok">✦</div>';
+      return '<div class="kart" onclick="window.duzenle(\''+i.id+'\')">'+foto+'<div class="kartic">'+
+        '<div class="bas">'+(i.baslik||'-')+'</div>'+
+        (i.not_?'<div class="notu">'+i.not_+'</div>':'')+
+        (i.ilham_metni?'<div class="ilhamr">✦ '+i.ilham_metni+'</div>':'')+
+        '<span class="durumr '+durum+'">'+(durumAd[durum]||durum)+'</span>'+
+        '</div></div>';
+    }).join('');
+  }catch(err){ liste.innerHTML='<div class="bos">Okunamadı: '+err.message+'</div>'; }
+}
+
+function pencereAc(){ document.getElementById('perde').style.display='flex'; }
+function pencereKapat(){ document.getElementById('perde').style.display='none'; }
+
+document.getElementById('ekleBtn').onclick=()=>{
+  duzenId=null; seciliFoto=null;
+  document.getElementById('pencereBaslik').textContent='Yeni İlham';
+  document.getElementById('onizle').style.display='none';
+  ['fBaslik','fNot','fIlham'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fDurum').value='fikir';
+  document.getElementById('silBtn').style.display='none';
+  document.getElementById('durumyazi').textContent='';
+  pencereAc();
+};
+window.duzenle=(id)=>{
+  const i=ilhamlar.find(x=>String(x.id)===String(id)); if(!i) return;
+  duzenId=id; seciliFoto=null;
+  document.getElementById('pencereBaslik').textContent='İlhamı Düzenle';
+  document.getElementById('onizle').style.display='none';
+  document.getElementById('fBaslik').value=i.baslik||'';
+  document.getElementById('fNot').value=i.not_||'';
+  document.getElementById('fIlham').value=i.ilham_metni||'';
+  document.getElementById('fDurum').value=(i.durum||'fikir');
+  document.getElementById('silBtn').style.display='block';
+  document.getElementById('durumyazi').textContent='';
+  pencereAc();
+};
+document.getElementById('kapatBtn').onclick=pencereKapat;
+
+document.getElementById('fotosecBtn').onclick=()=>document.getElementById('fotoInput').click();
+document.getElementById('fotoInput').onchange=(ev)=>{ const f=ev.target.files[0]; if(!f) return; const r=new FileReader();
+  r.onload=()=>{ seciliFoto={data:r.result.split(',')[1],type:f.type}; document.getElementById('onizle').src=r.result; document.getElementById('onizle').style.display='block'; }; r.readAsDataURL(f); };
+
+async function fotoYukleStorage(){
+  if(!seciliFoto) return null;
+  try{ const ad='eser_'+Date.now()+'.'+((seciliFoto.type||'').includes('png')?'png':'jpg'); const buf=Uint8Array.from(atob(seciliFoto.data),c=>c.charCodeAt(0));
+    const { error }=await supabase.storage.from('fotograflar').upload(ad,buf,{contentType:seciliFoto.type||'image/jpeg'}); if(error) return null;
+    return 'https://mepfyrnmscrqbzxlbjyf.supabase.co/storage/v1/object/public/fotograflar/'+ad;
+  }catch(e){ return null; }
+}
+
+document.getElementById('kaydetBtn').onclick=async ()=>{
+  const baslik=document.getElementById('fBaslik').value.trim();
+  if(!baslik){ document.getElementById('durumyazi').textContent='Önce bir başlık yaz'; return; }
+  document.getElementById('durumyazi').textContent='Kaydediliyor...';
+  const veri={ baslik, not_:document.getElementById('fNot').value.trim(), ilham_metni:document.getElementById('fIlham').value.trim(), durum:document.getElementById('fDurum').value };
+  try{
+    if(duzenId){ await fetch(SERVER+'/ilham-guncelle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:duzenId,...veri})}); }
+    else { const foto_url=await fotoYukleStorage(); await fetch(SERVER+'/ilham-ekle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...veri,foto_url})}); }
+    pencereKapat(); yukle();
+  }catch(err){ document.getElementById('durumyazi').textContent='Olmadı, tekrar dene'; }
+};
+
+document.getElementById('silBtn').onclick=async ()=>{
+  if(!confirm('Bu ilham silinsin mi?')) return;
+  document.getElementById('durumyazi').textContent='Siliniyor...';
+  try{ await fetch(SERVER+'/ilham-sil',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:duzenId})});
+    pencereKapat(); yukle();
+  }catch(err){ document.getElementById('durumyazi').textContent='Olmadı, tekrar dene'; }
+};
+
+yukle();
+</script>
+</body>
+</html>
