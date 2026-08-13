@@ -37,19 +37,21 @@ Sen karar vermezsin, karar vermesine yardım edersin. Son karar onun.
 
 NASIL KONUŞURSUN: İnsan gibi, akıcı. Madde işareti, yıldız, tire YOK. Düzgün Türkçe: ı, ş, ğ, ç, ö, ü. Para: altı yüz lira, yani 600 TL.
 
-KULLANICIYI TANI: Sana hafıza, müşteri, atölye ve borç bilgileri verilir. Hatırla, sohbete kat.
+KULLANICIYI TANI: Sana hafıza, müşteri, atölye, borç ve ilham bilgileri verilir. Hatırla, sohbete kat.
 
 ANTİKA DEĞERLEME VE HİKÂYE (çok önemli):
 Bir eser anlatıldığında ya da fotoğrafı geldiğinde, sadece değer söyleme. Şunları BİRLİKTE, akıcı bir anlatımla ver:
 1) Ne olduğu, hangi döneme ait olabileceği, durumu ve tahmini değer aralığı (kesin fiyat değil, aralık).
 2) HİKÂYESİ: O eşyanın ruhunu anlat. Ait olduğu dönemin kültürel anlamı, üstündeki motiflerin ya da desenlerin ne ifade ettiği, ve mümkünse o döneme dair küçük, ilginç bir tarihi dokunuş ya da anekdot. Eşyayı yaşat.
-3) TASARIM İLHAMI: Kullanıcı bir sanatçı; eskiyi yeniyle harmanlayıp özgün eşyalar (çanta, mozaik, tasarım) üretiyor. Bu esere bakarak ona hem SOMUT hem RUHLU bir tasarım fikri ver. Somut: bu motifi ya da formu bugüne nasıl taşıyabileceğini uygulanabilir biçimde söyle (örneğin bir motifi çantanın kapağına deri kabartma olarak işlemek, yanına modern minimal bir detay eklemek gibi). Ruhlu: o desenin ya da dönemin taşıdığı duyguyu, onu hangi hisle moderne taşıyabileceğini şiirsel ama abartısız bir dille anlat. İkisini birleştir: hem nasıl yapılacağını hem hangi ruhla yapılacağını.
+3) TASARIM İLHAMI: Kullanıcı bir sanatçı; eskiyi yeniyle harmanlayıp özgün eşyalar (çanta, mozaik, tasarım) üretiyor. Bu esere bakarak ona hem SOMUT hem RUHLU bir tasarım fikri ver. Somut: bu motifi ya da formu bugüne nasıl taşıyabileceğini uygulanabilir biçimde söyle. Ruhlu: o desenin ya da dönemin taşıdığı duyguyu, onu hangi hisle moderne taşıyabileceğini şiirsel ama abartısız bir dille anlat. İkisini birleştir.
 Bu üçünü her eser değerlendirmesinde doğal bir akış içinde ver, sıkıcı liste gibi değil, sohbet gibi.
+
+İLHAM PANOSU: Kullanıcının bir "ilham panosu" var; tasarım fikirlerini orada saklıyor. Eğer sohbette güzel bir tasarım fikri çıkarsa ve kullanıcı bunu kaydetmek isterse (ya da sen değerli bir fikir olduğunu düşünüp ona sorar, o da isterse), cevabının sonuna şunu ekle: [[ILHAM|kısa başlık|ilham metni]]. Başlık kısa olsun (örn: Osmanlı lale motifi çanta), ilham metni ise fikrin özü olsun. Bunu sadece gerçekten kaydedilmek istenen anlamlı bir fikir olduğunda yap.
 
 MÜŞTERİ EŞLEŞTİRME: Yeni eser gösterildiğinde onu arayan müşteri varsa kendiliğinden hatırlat.
 
 ATÖLYE - KENDİ ÜRETİMLERİ (mozaik, çanta gibi):
-Kullanıcı kendi yaptığı işi anlatırsa atölye işi olarak kaydet. Malzeme maliyetlerini topla. Fiyat sorulursa malzeme ve emek üstünden mantıklı aralık öner. Nerede satılır sorulursa GERÇEK yerler: Etsy, Instagram, yerel el sanatları ve tasarım pazarları, butik hediyelik dükkanları, zanaat fuarları. Uydurma alıcı deme. Sattığında kârı hesapla. Nasıl ilerler sorulursa uygulanabilir tavsiye ver. Tasarım fikri istenirse yukarıdaki gibi hem somut hem ruhlu ilham ver.
+Kullanıcı kendi yaptığı işi anlatırsa atölye işi olarak kaydet. Malzeme maliyetlerini topla. Fiyat sorulursa malzeme ve emek üstünden mantıklı aralık öner. Nerede satılır sorulursa GERÇEK yerler: Etsy, Instagram, yerel el sanatları ve tasarım pazarları, butik hediyelik dükkanları, zanaat fuarları. Uydurma alıcı deme. Sattığında kârı hesapla. Nasıl ilerler sorulursa uygulanabilir tavsiye ver. Tasarım fikri istenirse hem somut hem ruhlu ilham ver.
 
 BORÇ ALACAK: Kullanıcı birinin ona borçlu olduğunu ya da kendisinin birine borçlu olduğunu söylerse kaydet.
 
@@ -66,6 +68,7 @@ Gider: [[GIDER|aciklama|tutar|tarih]]
 Atölye işi: [[ATOLYE|ad|tur|malzeme_maliyeti|emek_saati|onerilen_fiyat|durum]]
 Atölye satışı: [[ATOLYESAT|ad|satis_fiyati]]
 Borç/alacak: [[BORC|kisi|tutar|tur|aciklama]]
+İlham: [[ILHAM|baslik|ilham metni]]
 
 MÜŞTERİ BULDU: Bir satış yaptığında, o ürünü arayan bir müşteri varsa kullanıcıya sor: bunu o müşteriye mi sattın diye. Kullanıcı evet derse cevabının sonuna ekle: [[MUSTERIBULDU|isim]]
 
@@ -73,7 +76,7 @@ Bu teknik satırlar hariç düzgün Türkçe kullan.`;
 
 async function buildContext() {
   const parts = [`Bugün: ${new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}`];
-  const tablolar = ['hafiza', 'eserler', 'kullanici_profili', 'alim_satim', 'musteriler', 'giderler', 'atolye', 'borc_alacak'];
+  const tablolar = ['hafiza', 'eserler', 'kullanici_profili', 'alim_satim', 'musteriler', 'giderler', 'atolye', 'borc_alacak', 'ilham'];
   for (const t of tablolar) {
     try {
       const { data, error } = await supabase.from(t).select('*').limit(300);
@@ -163,6 +166,26 @@ app.post('/borc-ekle', async (req, res) => {
   } catch(err){ res.status(500).json({error:err.message}); }
 });
 
+app.post('/ilham-ekle', async (req, res) => {
+  try { const b=req.body||{};
+    const { error }=await supabase.from('ilham').insert({ baslik:(b.baslik||'').trim(), not_:(b.not_||'').trim(), ilham_metni:(b.ilham_metni||'').trim(), durum:(b.durum||'fikir').trim(), foto_url:b.foto_url||null });
+    if(error) return res.status(500).json({error:error.message}); res.json({ok:true});
+  } catch(err){ res.status(500).json({error:err.message}); }
+});
+app.post('/ilham-guncelle', async (req, res) => {
+  try { const b=req.body||{}; const a={};
+    if(b.baslik!==undefined)a.baslik=(b.baslik||'').trim(); if(b.not_!==undefined)a.not_=(b.not_||'').trim();
+    if(b.ilham_metni!==undefined)a.ilham_metni=(b.ilham_metni||'').trim(); if(b.durum!==undefined)a.durum=(b.durum||'fikir').trim();
+    const { error }=await supabase.from('ilham').update(a).eq('id',b.id);
+    if(error) return res.status(500).json({error:error.message}); res.json({ok:true});
+  } catch(err){ res.status(500).json({error:err.message}); }
+});
+app.post('/ilham-sil', async (req, res) => {
+  try { const { error }=await supabase.from('ilham').delete().eq('id',(req.body||{}).id);
+    if(error) return res.status(500).json({error:error.message}); res.json({ok:true});
+  } catch(err){ res.status(500).json({error:err.message}); }
+});
+
 app.post('/gunun', async (req, res) => {
   try {
     const ad = (req.body && req.body.kullaniciAdi) ? String(req.body.kullaniciAdi).trim() : '';
@@ -224,6 +247,8 @@ app.post('/ask', async (req, res) => {
     if (asat) { cevap = cevap.replace(asat[0], '').trim(); try { const nm=(asat[1]||'').trim(); const fy=sayi(asat[2]); const { data: bul } = await supabase.from('atolye').select('*').ilike('ad','%'+nm+'%').limit(1); if (bul && bul.length) await supabase.from('atolye').update({ durum:'satildi', satis_fiyati: fy }).eq('id', bul[0].id); } catch (err) {} }
     const bc = cevap.match(/\[\[BORC\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
     if (bc) { cevap = cevap.replace(bc[0], '').trim(); try { await supabase.from('borc_alacak').insert({ kisi:(bc[1]||'').trim(), tutar: sayi(bc[2]) ?? 0, tur:(bc[3]||'alacak').trim(), aciklama:(bc[4]||'').trim() }); } catch (err) {} }
+    const il = cevap.match(/\[\[ILHAM\|([^|]*)\|([^\]]*)\]\]/);
+    if (il) { cevap = cevap.replace(il[0], '').trim(); try { await supabase.from('ilham').insert({ baslik:(il[1]||'').trim(), ilham_metni:(il[2]||'').trim(), durum:'fikir' }); } catch (err) {} }
     const mbd = cevap.match(/\[\[MUSTERIBULDU\|([^\]]*)\]\]/);
     if (mbd) { cevap = cevap.replace(mbd[0], '').trim(); try { const nm=(mbd[1]||'').trim(); const { data: bul } = await supabase.from('musteriler').select('*').ilike('isim','%'+nm+'%').limit(1); if (bul && bul.length) await supabase.from('musteriler').update({ buldu:true }).eq('id', bul[0].id); } catch (err) {} }
 
