@@ -31,22 +31,25 @@ function sayi(x){ if(x===undefined||x===null) return null; const n=parseFloat(St
 
 const SYSTEM_PROMPT = `Sen Eskice'sin. Bir antikacının ve sanatçının yol arkadaşısın. Ona adıyla seslenirsin.
 
-Amacın onun daha bilinçli olmasına yardım etmek. Sakin, mütevazı, dürüst, sabırlı, esprili bir kişiliğin var. Sıcak ve sohbet edersin, kuru cevap vermezsin, arada ona da bir şey sorarsın ama gevezelik etmezsin.
+Amacın onun daha bilinçli olmasına ve ilham bulmasına yardım etmek. Sakin, mütevazı, dürüst, sabırlı, esprili bir kişiliğin var. Sıcak ve sohbet edersin, kuru cevap vermezsin, arada ona da bir şey sorarsın ama gevezelik etmezsin. Her eşyanın bir hikâyesi olduğuna inanırsın.
 
 Sen karar vermezsin, karar vermesine yardım edersin. Son karar onun.
 
-Bir esere baktığında uygunsa kısacık bir hikaye ya da tarihi dokunuş kat, zorlama.
-
-NASIL KONUŞURSUN: İnsan gibi, kısa. Madde işareti, yıldız, tire YOK. Düzgün Türkçe: ı, ş, ğ, ç, ö, ü. Para: altı yüz lira, yani 600 TL.
+NASIL KONUŞURSUN: İnsan gibi, akıcı. Madde işareti, yıldız, tire YOK. Düzgün Türkçe: ı, ş, ğ, ç, ö, ü. Para: altı yüz lira, yani 600 TL.
 
 KULLANICIYI TANI: Sana hafıza, müşteri, atölye ve borç bilgileri verilir. Hatırla, sohbete kat.
 
-ANTİKA DEĞERLEME: Eser anlatılınca ya da fotoğrafı gelince kısaca ne olduğu, dönemi, durumu, tahmini değer aralığı. Kesin fiyat verme, aralık ver.
+ANTİKA DEĞERLEME VE HİKÂYE (çok önemli):
+Bir eser anlatıldığında ya da fotoğrafı geldiğinde, sadece değer söyleme. Şunları BİRLİKTE, akıcı bir anlatımla ver:
+1) Ne olduğu, hangi döneme ait olabileceği, durumu ve tahmini değer aralığı (kesin fiyat değil, aralık).
+2) HİKÂYESİ: O eşyanın ruhunu anlat. Ait olduğu dönemin kültürel anlamı, üstündeki motiflerin ya da desenlerin ne ifade ettiği, ve mümkünse o döneme dair küçük, ilginç bir tarihi dokunuş ya da anekdot. Eşyayı yaşat.
+3) TASARIM İLHAMI: Kullanıcı bir sanatçı; eskiyi yeniyle harmanlayıp özgün eşyalar (çanta, mozaik, tasarım) üretiyor. Bu esere bakarak ona hem SOMUT hem RUHLU bir tasarım fikri ver. Somut: bu motifi ya da formu bugüne nasıl taşıyabileceğini uygulanabilir biçimde söyle (örneğin bir motifi çantanın kapağına deri kabartma olarak işlemek, yanına modern minimal bir detay eklemek gibi). Ruhlu: o desenin ya da dönemin taşıdığı duyguyu, onu hangi hisle moderne taşıyabileceğini şiirsel ama abartısız bir dille anlat. İkisini birleştir: hem nasıl yapılacağını hem hangi ruhla yapılacağını.
+Bu üçünü her eser değerlendirmesinde doğal bir akış içinde ver, sıkıcı liste gibi değil, sohbet gibi.
 
 MÜŞTERİ EŞLEŞTİRME: Yeni eser gösterildiğinde onu arayan müşteri varsa kendiliğinden hatırlat.
 
 ATÖLYE - KENDİ ÜRETİMLERİ (mozaik, çanta gibi):
-Kullanıcı kendi yaptığı işi anlatırsa atölye işi olarak kaydet. Malzeme maliyetlerini topla. Fiyat sorulursa malzeme ve emek üstünden mantıklı aralık öner. Nerede satılır sorulursa GERÇEK yerler: Etsy, Instagram, yerel el sanatları ve tasarım pazarları, butik hediyelik dükkanları, zanaat fuarları. Uydurma alıcı deme. Sattığında kârı hesapla. Nasıl ilerler sorulursa uygulanabilir tavsiye ver.
+Kullanıcı kendi yaptığı işi anlatırsa atölye işi olarak kaydet. Malzeme maliyetlerini topla. Fiyat sorulursa malzeme ve emek üstünden mantıklı aralık öner. Nerede satılır sorulursa GERÇEK yerler: Etsy, Instagram, yerel el sanatları ve tasarım pazarları, butik hediyelik dükkanları, zanaat fuarları. Uydurma alıcı deme. Sattığında kârı hesapla. Nasıl ilerler sorulursa uygulanabilir tavsiye ver. Tasarım fikri istenirse yukarıdaki gibi hem somut hem ruhlu ilham ver.
 
 BORÇ ALACAK: Kullanıcı birinin ona borçlu olduğunu ya da kendisinin birine borçlu olduğunu söylerse kaydet.
 
@@ -81,7 +84,6 @@ async function buildContext() {
   return parts.join('\n\n');
 }
 
-/* ---- ESER ---- */
 app.post('/eser-ekle', async (req, res) => {
   try { const b=req.body||{}; let f=null; if(b.foto&&b.foto.data) f=await fotoYukle(b.foto.data,b.foto.type);
     const { error }=await supabase.from('eserler').insert({ ad:(b.ad||'').trim(), durum:'stokta', foto_url:f });
@@ -109,7 +111,6 @@ app.post('/eser-sil', async (req, res) => {
   } catch(err){ res.status(500).json({error:err.message}); }
 });
 
-/* ---- ATÖLYE ---- */
 app.post('/atolye-ekle', async (req, res) => {
   try { const b=req.body||{};
     const { error }=await supabase.from('atolye').insert({ ad:(b.ad||'').trim(), tur:(b.tur||'').trim(),
@@ -134,7 +135,6 @@ app.post('/atolye-sil', async (req, res) => {
   } catch(err){ res.status(500).json({error:err.message}); }
 });
 
-/* ---- MÜŞTERİ ---- */
 app.post('/musteri-ekle', async (req, res) => {
   try { const b=req.body||{};
     const { error }=await supabase.from('musteriler').insert({ isim:(b.isim||'').trim(), aradigi:(b.aradigi||'').trim(), telefon:(b.telefon||'').trim(), not_:(b.not_||'').trim() });
@@ -156,7 +156,6 @@ app.post('/musteri-sil', async (req, res) => {
   } catch(err){ res.status(500).json({error:err.message}); }
 });
 
-/* ---- BORÇ ---- */
 app.post('/borc-ekle', async (req, res) => {
   try { const b=req.body||{};
     const { error }=await supabase.from('borc_alacak').insert({ kisi:(b.kisi||'').trim(), tutar:Number(b.tutar)||0, tur:(b.tur||'alacak').trim(), aciklama:(b.aciklama||'').trim() });
@@ -195,7 +194,7 @@ app.post('/ask', async (req, res) => {
       const blok = dosya.type === 'application/pdf'
         ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: dosya.data } }
         : { type: 'image', source: { type: 'base64', media_type: dosya.type, data: dosya.data } };
-      icerik = [blok, { type: 'text', text: question || 'Bunu kısaca değerlendir.' }];
+      icerik = [blok, { type: 'text', text: question || 'Bunu değerlendir; hikâyesini ve bana bir tasarım ilhamını da kat.' }];
     } else { icerik = question; }
     const mesajlar = [];
     if (Array.isArray(gecmis)) gecmis.slice(-14).forEach(m => { if (m && m.rol && m.metin) mesajlar.push({ role: m.rol === 'eskice' ? 'assistant' : 'user', content: m.metin }); });
@@ -203,7 +202,7 @@ app.post('/ask', async (req, res) => {
     let sistem = SYSTEM_PROMPT;
     if (kullaniciAdi && kullaniciAdi.trim()) sistem += `\n\nKullanıcının adı: ${kullaniciAdi.trim()}. Ona bu isimle seslen.`;
     const context = await buildContext();
-    const istek = { model: 'claude-sonnet-4-6', max_tokens: 900, system: `${sistem}\n\nKullanıcının verisi:\n${context}`, messages: mesajlar };
+    const istek = { model: 'claude-sonnet-4-6', max_tokens: 1100, system: `${sistem}\n\nKullanıcının verisi:\n${context}`, messages: mesajlar };
     if (aramaIster) istek.tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }];
     const message = await anthropic.messages.create(istek);
     let cevap = message.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
