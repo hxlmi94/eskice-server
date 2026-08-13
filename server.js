@@ -27,6 +27,26 @@ async function fotoYukle(base64, tip) {
   } catch (e) { return null; }
 }
 
+// OpenAI ile görsel üret, Supabase'e kaydet, url döndür
+async function gorselUret(aciklama) {
+  try {
+    const r = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-image-1', prompt: aciklama, n: 1, size: '1024x1024' })
+    });
+    const j = await r.json();
+    if (!r.ok) { console.error('gorsel hata', j); return null; }
+    const b64 = j.data && j.data[0] && j.data[0].b64_json;
+    if (!b64) return null;
+    const ad = 'gorsel_' + Date.now() + '.png';
+    const buf = Buffer.from(b64, 'base64');
+    const { error } = await supabase.storage.from('fotograflar').upload(ad, buf, { contentType: 'image/png' });
+    if (error) { console.error(error); return null; }
+    return FOTO_URL_BASE + ad;
+  } catch (e) { console.error(e); return null; }
+}
+
 function sayi(x){ if(x===undefined||x===null) return null; const n=parseFloat(String(x).replace(',','.').replace(/[^\d.]/g,'')); return isNaN(n)?null:n; }
 
 const SYSTEM_PROMPT = `Sen Eskice'sin. Bir antikacının ve sanatçının yol arkadaşısın. Ona adıyla seslenirsin.
@@ -46,7 +66,9 @@ Bir eser anlatıldığında ya da fotoğrafı geldiğinde, sadece değer söylem
 3) TASARIM İLHAMI: Kullanıcı bir sanatçı; eskiyi yeniyle harmanlayıp özgün eşyalar (çanta, mozaik, tasarım) üretiyor. Bu esere bakarak ona hem SOMUT hem RUHLU bir tasarım fikri ver. Somut: bu motifi ya da formu bugüne nasıl taşıyabileceğini uygulanabilir biçimde söyle. Ruhlu: o desenin ya da dönemin taşıdığı duyguyu, onu hangi hisle moderne taşıyabileceğini şiirsel ama abartısız bir dille anlat. İkisini birleştir.
 Bu üçünü her eser değerlendirmesinde doğal bir akış içinde ver, sıkıcı liste gibi değil, sohbet gibi.
 
-İLHAM PANOSU: Kullanıcının bir "ilham panosu" var; tasarım fikirlerini orada saklıyor. Eğer sohbette güzel bir tasarım fikri çıkarsa ve kullanıcı bunu kaydetmek isterse (ya da sen değerli bir fikir olduğunu düşünüp ona sorar, o da isterse), cevabının sonuna şunu ekle: [[ILHAM|kısa başlık|ilham metni]]. Başlık kısa olsun (örn: Osmanlı lale motifi çanta), ilham metni ise fikrin özü olsun. Bunu sadece gerçekten kaydedilmek istenen anlamlı bir fikir olduğunda yap.
+GÖRSEL ÜRETİMİ: Kullanıcı bir şeyin resmini, çizimini, taslağını isterse (örneğin "bunu çiz", "görselleştir", "resmini yap", "nasıl durur göster") sen görsel üretebilirsin. Bunu yapmak için, kullanıcıya kısa bir cümleyle görseli hazırladığını söyle (örneğin "Şunu senin için canlandırdım.") ve cevabının EN SONUNA şu satırı ekle: [[GORSEL|ingilizce, detaylı görsel açıklaması]]. Açıklama İNGİLİZCE ve detaylı olmalı (görsel yapay zekâsı İngilizce daha iyi anlıyor): nesne, motif, stil, malzeme, renk, arka plan gibi. Örnek: [[GORSEL|a modern leather handbag with an Ottoman tulip motif embossed on the front flap, elegant minimal design, warm earth tones, studio product photo]]. Bu satırı sadece kullanıcı gerçekten bir görsel istediğinde ekle. Kullanıcı sadece fikir soruyorsa görsel üretme, sadece anlat.
+
+İLHAM PANOSU: Kullanıcının bir ilham panosu var. Sohbette güzel bir tasarım fikri çıkar ve kullanıcı kaydetmek isterse cevabının sonuna ekle: [[ILHAM|kısa başlık|ilham metni]].
 
 MÜŞTERİ EŞLEŞTİRME: Yeni eser gösterildiğinde onu arayan müşteri varsa kendiliğinden hatırlat.
 
@@ -69,6 +91,7 @@ Atölye işi: [[ATOLYE|ad|tur|malzeme_maliyeti|emek_saati|onerilen_fiyat|durum]]
 Atölye satışı: [[ATOLYESAT|ad|satis_fiyati]]
 Borç/alacak: [[BORC|kisi|tutar|tur|aciklama]]
 İlham: [[ILHAM|baslik|ilham metni]]
+Görsel: [[GORSEL|ingilizce görsel açıklaması]]
 
 MÜŞTERİ BULDU: Bir satış yaptığında, o ürünü arayan bir müşteri varsa kullanıcıya sor: bunu o müşteriye mi sattın diye. Kullanıcı evet derse cevabının sonuna ekle: [[MUSTERIBULDU|isim]]
 
@@ -231,6 +254,8 @@ app.post('/ask', async (req, res) => {
     let cevap = message.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
     if (!cevap) cevap = 'Bir şeyler ters gitti, tekrar dener misin?';
 
+    let uretilenGorsel = null;
+
     const h = cevap.match(/\[\[HAFIZA\|([^\]]*)\]\]/);
     if (h) { cevap = cevap.replace(h[0], '').trim(); try { await supabase.from('hafiza').insert({ icerik:(h[1]||'').trim() }); } catch (err) {} }
     const e = cevap.match(/\[\[ESER\|([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]\]/);
@@ -249,10 +274,12 @@ app.post('/ask', async (req, res) => {
     if (bc) { cevap = cevap.replace(bc[0], '').trim(); try { await supabase.from('borc_alacak').insert({ kisi:(bc[1]||'').trim(), tutar: sayi(bc[2]) ?? 0, tur:(bc[3]||'alacak').trim(), aciklama:(bc[4]||'').trim() }); } catch (err) {} }
     const il = cevap.match(/\[\[ILHAM\|([^|]*)\|([^\]]*)\]\]/);
     if (il) { cevap = cevap.replace(il[0], '').trim(); try { await supabase.from('ilham').insert({ baslik:(il[1]||'').trim(), ilham_metni:(il[2]||'').trim(), durum:'fikir' }); } catch (err) {} }
+    const gr = cevap.match(/\[\[GORSEL\|([^\]]*)\]\]/);
+    if (gr) { cevap = cevap.replace(gr[0], '').trim(); try { uretilenGorsel = await gorselUret((gr[1]||'').trim()); } catch (err) {} }
     const mbd = cevap.match(/\[\[MUSTERIBULDU\|([^\]]*)\]\]/);
     if (mbd) { cevap = cevap.replace(mbd[0], '').trim(); try { const nm=(mbd[1]||'').trim(); const { data: bul } = await supabase.from('musteriler').select('*').ilike('isim','%'+nm+'%').limit(1); if (bul && bul.length) await supabase.from('musteriler').update({ buldu:true }).eq('id', bul[0].id); } catch (err) {} }
 
-    res.json({ answer: cevap, foto: fotoUrl });
+    res.json({ answer: cevap, foto: fotoUrl, uretilenGorsel });
   } catch (err) { console.error(err); res.status(500).json({ error: err.message }); }
 });
 
