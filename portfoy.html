@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Koleksiyon — Eskice</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#8a6435">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{--bronz:#8a6435;--yazi:#5f4623;--muted:#8a7a5f;--krem:#fbf5e9;--line:#d8c39c;--mor:#7a5c8a}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'EB Garamond',serif;color:var(--yazi);min-height:100vh;display:flex;justify-content:center;background:#e7d4ab url('https://hxlmi94.github.io/eskice-server/sohbet.png') center/cover fixed no-repeat}
+  body::before{content:"";position:fixed;inset:0;background:rgba(244,236,216,.72);z-index:0}
+  .ekran{position:relative;z-index:1;width:100%;max-width:480px;min-height:100vh;padding:20px 20px 40px;background:rgba(248,242,228,.4);border-left:1px solid rgba(138,100,53,.18);border-right:1px solid rgba(138,100,53,.18)}
+  .ust{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+  .geri{text-decoration:none;color:var(--bronz);font-size:28px;line-height:1}
+  .baslik{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--yazi);letter-spacing:1px}
+  .altyazi{text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px;color:var(--bronz);margin:2px 0 20px}
+  .sayi{text-align:center;font-size:13px;color:var(--muted);font-style:italic;margin-bottom:18px}
+  .galeri{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .parca{background:rgba(251,245,233,.9);border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s}
+  .parca:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(110,83,35,.16)}
+  .parca img{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:#e7dcc4}
+  .parca .yokfoto{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#c3ab88;font-size:34px;background:#efe6d4}
+  .parca .bilgi{padding:10px 12px}
+  .parca .ad{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--yazi);line-height:1.2}
+  .parca .tur{font-size:12px;color:var(--mor);font-style:italic;margin-top:2px}
+  .bos{grid-column:1/-1;text-align:center;color:var(--muted);font-style:italic;padding:44px 16px;border:1px dashed var(--line);border-radius:14px;line-height:1.6}
+  .yukleniyor{grid-column:1/-1;text-align:center;color:var(--muted);padding:40px;font-style:italic}
+  /* büyük görünüm */
+  .perde{position:fixed;inset:0;background:rgba(40,28,12,.82);z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+  .perde img{max-width:100%;max-height:70vh;border-radius:14px;border:1px solid rgba(216,195,156,.4)}
+  .perde .bad{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--krem);margin-top:16px;text-align:center}
+  .perde .btur{font-size:14px;color:#d8c39c;font-style:italic;margin-top:4px}
+  .perde .kapat{position:absolute;top:20px;right:24px;color:var(--krem);font-size:32px;cursor:pointer;line-height:1}
+</style>
+</head>
+<body>
+  <div class="ekran">
+    <div class="ust">
+      <a class="geri" href="menu.html">‹</a>
+      <div class="baslik">Koleksiyon</div>
+    </div>
+    <div class="altyazi">emeğinle var ettiklerin</div>
+    <div class="sayi" id="sayi"></div>
+    <div class="galeri" id="galeri"><div class="yukleniyor">Yükleniyor...</div></div>
+  </div>
+
+  <div class="perde" id="perde">
+    <span class="kapat" id="kapat">×</span>
+    <img id="buyukFoto">
+    <div class="bad" id="buyukAd"></div>
+    <div class="btur" id="buyukTur"></div>
+  </div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const supabase = createClient(
+  'https://mepfyrnmscrqbzxlbjyf.supabase.co',
+  'sb_publishable_QE5BnaX_nvb36agQ0t0GNw_wkASsY06'
+);
+let isler=[];
+async function yukle(){
+  const g=document.getElementById('galeri');
+  try{
+    const { data, error } = await supabase.from('atolye').select('*').order('created_at',{ascending:false});
+    if(error) throw error;
+    isler=data||[];
+    if(!isler.length){ g.innerHTML='<div class="bos">Koleksiyonun henüz boş. Atölye\'de bir iş oluşturup fotoğrafını eklediğinde, burada güzel bir vitrin gibi görünecek.</div>'; document.getElementById('sayi').textContent=''; return; }
+    document.getElementById('sayi').textContent=isler.length+' eser';
+    g.innerHTML=isler.map((i,idx)=>{
+      const foto=i.foto_url?'<img src="'+i.foto_url+'">':'<div class="yokfoto">🎨</div>';
+      return '<div class="parca" onclick="window.buyut('+idx+')">'+foto+
+        '<div class="bilgi"><div class="ad">'+(i.ad||'-')+'</div>'+(i.tur?'<div class="tur">'+i.tur+'</div>':'')+'</div></div>';
+    }).join('');
+  }catch(err){ g.innerHTML='<div class="bos">Okunamadı: '+err.message+'</div>'; }
+}
+window.buyut=(idx)=>{
+  const i=isler[idx]; if(!i) return;
+  if(!i.foto_url){ return; }
+  document.getElementById('buyukFoto').src=i.foto_url;
+  document.getElementById('buyukAd').textContent=i.ad||'';
+  document.getElementById('buyukTur').textContent=i.tur||'';
+  document.getElementById('perde').style.display='flex';
+};
+document.getElementById('kapat').onclick=()=>document.getElementById('perde').style.display='none';
+document.getElementById('perde').onclick=(e)=>{ if(e.target.id==='perde') document.getElementById('perde').style.display='none'; };
+yukle();
+</script>
+</body>
+</html>
