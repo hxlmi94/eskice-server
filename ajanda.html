@@ -17,7 +17,6 @@
   .geri{text-decoration:none;color:var(--bronz);font-size:28px;line-height:1}
   .baslik{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--yazi);letter-spacing:1px}
   .bolum{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--bronz2);margin:20px 0 10px}
-  /* takvim */
   .takvim{background:rgba(251,245,233,.85);border:1px solid var(--line);border-radius:16px;padding:14px}
   .takust{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
   .takust button{background:none;border:none;color:var(--bronz);font-size:22px;cursor:pointer;padding:0 8px}
@@ -31,7 +30,6 @@
   .tarihler button.dolu::after{content:"";position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--yesil)}
   .tarihler button.secili.dolu::after{background:var(--krem)}
   .tarihler button.bos{visibility:hidden}
-  /* liste */
   .ekleme{display:flex;gap:8px;margin-bottom:12px}
   .ekleme input[type=text]{flex:1;background:#fffdf7;border:1px solid var(--line);border-radius:10px;padding:11px;color:var(--yazi);font-family:'EB Garamond',serif;font-size:15px}
   .ekleme input[type=time]{width:96px;background:#fffdf7;border:1px solid var(--line);border-radius:10px;padding:11px 8px;color:var(--yazi);font-family:'EB Garamond',serif;font-size:15px}
@@ -44,6 +42,7 @@
   .madde .sil{background:none;border:none;color:#b06a53;cursor:pointer;font-size:18px}
   .bos{text-align:center;color:var(--muted);font-style:italic;padding:24px 12px;border:1px dashed var(--line);border-radius:12px}
   .secgun{font-size:14px;color:var(--muted);font-style:italic;margin-bottom:10px}
+  .bildirimNot{font-size:12px;color:var(--muted);font-style:italic;text-align:center;margin-top:14px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -73,9 +72,38 @@
     </div>
 
     <div class="plan" id="plan"></div>
+    <div class="bildirimNot" id="bildirimNot"></div>
   </div>
 
-<script>
+<script type="module">
+  import { Capacitor } from 'https://cdn.jsdelivr.net/npm/@capacitor/core@6/dist/index.js';
+  let LocalNotifications=null, telefonMu=false;
+  try{ telefonMu = Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform(); }catch(e){ telefonMu=false; }
+
+  async function bildirimHazirla(){
+    if(!telefonMu) return;
+    try{
+      const mod = await import('https://cdn.jsdelivr.net/npm/@capacitor/local-notifications@6/dist/index.js');
+      LocalNotifications = mod.LocalNotifications;
+      await LocalNotifications.requestPermissions();
+      document.getElementById('bildirimNot').textContent='Bu telefonda kurduğun saatlerde Eskice sana bildirim gönderir.';
+    }catch(e){ LocalNotifications=null; }
+  }
+
+  async function bildirimKur(tarih, saat, metin){
+    if(!telefonMu || !LocalNotifications || !saat) return;
+    try{
+      const [y,m,g]=tarih.split('-').map(Number);
+      const [sa,dk]=saat.split(':').map(Number);
+      const ne=new Date(y,m-1,g,sa,dk,0);
+      if(ne.getTime() <= Date.now()) return;
+      const id = Math.floor(Math.random()*2000000000) + 1;
+      await LocalNotifications.schedule({ notifications:[{
+        id, title:'Eskice', body:metin, schedule:{ at: ne }
+      }]});
+    }catch(e){}
+  }
+
   const AYLAR=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
   let bugun=new Date();
   let gosterilenAy=new Date(bugun.getFullYear(), bugun.getMonth(), 1);
@@ -88,7 +116,7 @@
   function takvimCiz(){
     document.getElementById('takAy').textContent = AYLAR[gosterilenAy.getMonth()]+' '+gosterilenAy.getFullYear();
     const ilkGun=new Date(gosterilenAy.getFullYear(),gosterilenAy.getMonth(),1);
-    let bosluk=(ilkGun.getDay()+6)%7; // pazartesi=0
+    let bosluk=(ilkGun.getDay()+6)%7;
     const gunSayisi=new Date(gosterilenAy.getFullYear(),gosterilenAy.getMonth()+1,0).getDate();
     const veri=veriAl();
     let html='';
@@ -143,7 +171,7 @@
     return bas+'/'+bit;
   }
 
-  document.getElementById('ekleBtn').onclick=()=>{
+  document.getElementById('ekleBtn').onclick=async ()=>{
     const metin=document.getElementById('metin').value.trim();
     const saat=document.getElementById('saat').value;
     if(!metin) return;
@@ -151,6 +179,7 @@
     if(!v[seciliTarih]) v[seciliTarih]=[];
     v[seciliTarih].push({saat,metin});
     veriYaz(v);
+    await bildirimKur(seciliTarih, saat, metin);
     document.getElementById('metin').value=''; document.getElementById('saat').value='';
     takvimCiz(); planCiz();
   };
@@ -159,7 +188,7 @@
   document.getElementById('oncekiAy').onclick=()=>{ gosterilenAy.setMonth(gosterilenAy.getMonth()-1); takvimCiz(); };
   document.getElementById('sonrakiAy').onclick=()=>{ gosterilenAy.setMonth(gosterilenAy.getMonth()+1); takvimCiz(); };
 
-  takvimCiz(); planCiz();
+  takvimCiz(); planCiz(); bildirimHazirla();
 </script>
 </body>
 </html>
