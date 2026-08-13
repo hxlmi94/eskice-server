@@ -27,7 +27,6 @@ async function fotoYukle(base64, tip) {
   } catch (e) { return null; }
 }
 
-// OpenAI ile görsel üret, Supabase'e kaydet, url döndür
 async function gorselUret(aciklama) {
   try {
     const r = await fetch('https://api.openai.com/v1/images/generations', {
@@ -66,7 +65,7 @@ Bir eser anlatıldığında ya da fotoğrafı geldiğinde, sadece değer söylem
 3) TASARIM İLHAMI: Kullanıcı bir sanatçı; eskiyi yeniyle harmanlayıp özgün eşyalar (çanta, mozaik, tasarım) üretiyor. Bu esere bakarak ona hem SOMUT hem RUHLU bir tasarım fikri ver. Somut: bu motifi ya da formu bugüne nasıl taşıyabileceğini uygulanabilir biçimde söyle. Ruhlu: o desenin ya da dönemin taşıdığı duyguyu, onu hangi hisle moderne taşıyabileceğini şiirsel ama abartısız bir dille anlat. İkisini birleştir.
 Bu üçünü her eser değerlendirmesinde doğal bir akış içinde ver, sıkıcı liste gibi değil, sohbet gibi.
 
-GÖRSEL ÜRETİMİ: Kullanıcı bir şeyin resmini, çizimini, taslağını isterse (örneğin "bunu çiz", "görselleştir", "resmini yap", "nasıl durur göster") sen görsel üretebilirsin. Bunu yapmak için, kullanıcıya kısa bir cümleyle görseli hazırladığını söyle (örneğin "Şunu senin için canlandırdım.") ve cevabının EN SONUNA şu satırı ekle: [[GORSEL|ingilizce, detaylı görsel açıklaması]]. Açıklama İNGİLİZCE ve detaylı olmalı (görsel yapay zekâsı İngilizce daha iyi anlıyor): nesne, motif, stil, malzeme, renk, arka plan gibi. Örnek: [[GORSEL|a modern leather handbag with an Ottoman tulip motif embossed on the front flap, elegant minimal design, warm earth tones, studio product photo]]. Bu satırı sadece kullanıcı gerçekten bir görsel istediğinde ekle. Kullanıcı sadece fikir soruyorsa görsel üretme, sadece anlat.
+GÖRSEL ÜRETİMİ: Kullanıcı bir şeyin resmini, çizimini, taslağını isterse (örneğin "bunu çiz", "görselleştir", "resmini yap", "nasıl durur göster") sen görsel üretebilirsin. Bunu yapmak için, kullanıcıya kısa bir cümleyle görseli hazırladığını söyle (örneğin "Şunu senin için canlandırdım.") ve cevabının EN SONUNA şu satırı ekle: [[GORSEL|ingilizce, detaylı görsel açıklaması]]. Açıklama İNGİLİZCE ve detaylı olmalı: nesne, motif, stil, malzeme, renk, arka plan gibi. Bu satırı sadece kullanıcı gerçekten bir görsel istediğinde ekle. Kullanıcı sadece fikir soruyorsa görsel üretme, sadece anlat.
 
 İLHAM PANOSU: Kullanıcının bir ilham panosu var. Sohbette güzel bir tasarım fikri çıkar ve kullanıcı kaydetmek isterse cevabının sonuna ekle: [[ILHAM|kısa başlık|ilham metni]].
 
@@ -207,6 +206,24 @@ app.post('/ilham-sil', async (req, res) => {
   try { const { error }=await supabase.from('ilham').delete().eq('id',(req.body||{}).id);
     if(error) return res.status(500).json({error:error.message}); res.json({ok:true});
   } catch(err){ res.status(500).json({error:err.message}); }
+});
+
+// Alarm için insan gibi, sıcak hatırlatma cümlesi üret
+app.post('/hatirlatma', async (req, res) => {
+  try {
+    const metin = (req.body && req.body.metin) ? String(req.body.metin).trim() : '';
+    const ad = (req.body && req.body.kullaniciAdi) ? String(req.body.kullaniciAdi).trim() : '';
+    const saat = (req.body && req.body.saat) ? String(req.body.saat).trim() : '';
+    if (!metin) return res.json({ cumle: '' });
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6', max_tokens: 120,
+      system: `Sen Eskice'sin, ${ad||'kullanıcının'} sıcak yol arkadaşı. Sana bir hatırlatma konusu verilecek. Bunun için, o kişiye o an bildirim olarak gidecek TEK cümlelik, sıcak, insan gibi, sevecen bir hatırlatma yaz. Ona adıyla seslen. Kısa olsun (en fazla bir iki kısa cümle). Emoji kullanma. Düzgün Türkçe. Sadece cümleyi yaz, başka hiçbir şey ekleme. Örnek konu: "ilaç" -> "Aylin, ilaç vaktin geldi, kendine iyi bakmayı unutma." Örnek: "sanat saati" -> "Aylin, şimdi atölye saatin, ellerin güzel şeyler var etsin."`,
+      messages: [{ role:'user', content: `Hatırlatma konusu: "${metin}"${saat?(' (saat '+saat+')'):''}. Bunun için sıcak tek cümlelik hatırlatma yaz.` }],
+    });
+    let cumle = message.content.filter(b=>b.type==='text').map(b=>b.text).join(' ').trim();
+    if (cumle.length > 180) cumle = cumle.slice(0,180);
+    res.json({ cumle });
+  } catch (err) { res.json({ cumle: '' }); }
 });
 
 app.post('/gunun', async (req, res) => {
