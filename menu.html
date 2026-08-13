@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="ikon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <style>
-  :root{--bronz:#8a6435;--altin:#b98f4e;--yazi:#5f4623;--krem:#fbf5e9;--line:#d8c39c}
+  :root{--bronz:#8a6435;--altin:#b98f4e;--yazi:#5f4623;--krem:#fbf5e9;--line:#d8c39c;--gul:#a8577a}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'EB Garamond',serif;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;background:#e7d4ab url('https://hxlmi94.github.io/eskice-server/sohbet.png') center/cover fixed no-repeat}
   body::before{content:"";position:fixed;inset:0;background:rgba(241,231,206,.6);z-index:0}
@@ -35,6 +35,7 @@
   .kart:hover{transform:translateY(-3px);background:rgba(253,248,238,.97);box-shadow:0 8px 20px rgba(110,83,35,.18)}
   .kart svg{width:32px;height:32px;color:var(--bronz)}
   .kart .et{font-size:16px;color:var(--yazi);font-weight:500}
+  .kart.ilham svg{color:var(--gul)}
   .sohbet{grid-column:1 / -1;background:linear-gradient(160deg,#9a7238,#6e5323);border:none;padding:24px 12px}
   .sohbet svg{width:38px;height:38px;color:var(--krem)}
   .sohbet .et{color:var(--krem);font-size:19px;letter-spacing:1px}
@@ -73,6 +74,10 @@
       <a class="kart" href="atolye.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 l3 6 6 1 -4.5 4.5 1 6 -5.5 -3 -5.5 3 1 -6 -4.5 -4.5 6 -1z"/></svg>
         <span class="et">Atölye</span>
+      </a>
+      <a class="kart ilham" href="ilham.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18 h6 M10 21 h4 M12 2 a6 6 0 0 0 -4 10.5 c1 1 1.5 1.8 1.5 3.5 h5 c0 -1.7 .5 -2.5 1.5 -3.5 A6 6 0 0 0 12 2z"/></svg>
+        <span class="et">İlham</span>
       </a>
       <a class="kart" href="hedefler.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
