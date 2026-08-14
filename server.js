@@ -244,7 +244,6 @@ BILGI: (antika, sanat, mozaik, dönem ya da bir usta hakkında tek cümlelik ilg
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Sesli konuşma için OpenAI Realtime geçici oturum anahtarı
 app.post('/sesli-oturum', async (req, res) => {
   try {
     const ad = (req.body && req.body.kullaniciAdi) ? String(req.body.kullaniciAdi).trim() : '';
@@ -315,14 +314,15 @@ app.post('/ask', async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ error: err.message }); }
 });
 
+// Sesli okuma — OpenAI TTS (ElevenLabs yerine)
 app.post('/ses', async (req, res) => {
   try {
     const { metin } = req.body;
     if (!metin) return res.status(400).json({ error: 'metin gerekli' });
-    const voiceId = 'EXAVITQu4vr4xnSDxMaL';
-    const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-      method: 'POST', headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: metin, model_id: 'eleven_multilingual_v2', voice_settings: { stability: 0.4, similarity_boost: 0.85, style: 0.25, use_speaker_boost: true } }),
+    const r = await fetch('https://api.openai.com/v1/audio/speech', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o-mini-tts', voice: 'shimmer', input: metin })
     });
     if (!r.ok) { const t = await r.text(); return res.status(500).json({ error: t }); }
     const buf = Buffer.from(await r.arrayBuffer());
