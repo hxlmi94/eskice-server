@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sesli — Eskice</title>
+<meta name="theme-color" content="#8a6435">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{--bronz:#8a6435;--yazi:#5f4623;--muted:#8a7a5f;--krem:#fbf5e9;--line:#d8c39c;--yesil:#5b7048;--kirmizi:#a8574f}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'EB Garamond',serif;color:var(--yazi);min-height:100vh;display:flex;justify-content:center;background:#e7d4ab url('https://hxlmi94.github.io/eskice-server/sohbet.png') center/cover fixed no-repeat}
+  body::before{content:"";position:fixed;inset:0;background:rgba(242,233,210,.66);z-index:0}
+  .ekran{position:relative;z-index:1;width:100%;max-width:480px;min-height:100vh;padding:20px 22px 40px;display:flex;flex-direction:column;align-items:center}
+  .ust{display:flex;align-items:center;gap:12px;width:100%;margin-bottom:20px}
+  .geri{text-decoration:none;color:var(--bronz);font-size:28px;line-height:1}
+  .baslik{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--yazi);letter-spacing:1px}
+  .orta{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;width:100%}
+  .halka{width:180px;height:180px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#f7ecd6,#e7d4ab);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;position:relative;transition:transform .2s}
+  .halka.dinliyor{animation:nabiz 1.4s ease-in-out infinite}
+  .halka.konusuyor{animation:nabiz 0.7s ease-in-out infinite}
+  @keyframes nabiz{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(138,100,53,.25)}50%{transform:scale(1.05);box-shadow:0 0 0 22px rgba(138,100,53,0)}}
+  .halka svg{width:70px;height:70px;color:var(--bronz)}
+  .durum{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--bronz);font-style:italic;text-align:center;min-height:28px}
+  .btn{border:none;border-radius:40px;padding:16px 34px;font-family:'EB Garamond',serif;font-size:18px;cursor:pointer;display:flex;align-items:center;gap:10px}
+  .btn.basla{background:linear-gradient(180deg,#a97c46,#8a6435);color:var(--krem)}
+  .btn.bitir{background:rgba(168,87,79,.12);color:var(--kirmizi);border:1px solid #e0bcb6}
+  .not{font-size:13px;color:var(--muted);font-style:italic;text-align:center;line-height:1.6;max-width:300px;margin-top:10px}
+</style>
+</head>
+<body>
+  <div class="ekran">
+    <div class="ust">
+      <a class="geri" href="menu.html">‹</a>
+      <div class="baslik">Sesli Sohbet</div>
+    </div>
+    <div class="orta">
+      <div class="halka" id="halka">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M6 11 a6 6 0 0 0 12 0"/><path d="M12 17 v4 M8 21 h8"/></svg>
+      </div>
+      <div class="durum" id="durum">Eskice ile sesli konuşmak için başla</div>
+      <button class="btn basla" id="baslaBtn">🎙️ Konuşmaya başla</button>
+      <div class="not" id="not">İlk kez açtığında mikrofon izni isteyecek. İzin ver, sonra Eskice ile konuşabilirsin.</div>
+    </div>
+  </div>
+
+<script>
+const SERVER='https://eskice-server.onrender.com';
+const kullaniciAdi=(localStorage.getItem('eskice_isim')||'').trim();
+let pc=null, mikrofon=null, calisiyorMu=false;
+const halka=document.getElementById('halka');
+const durum=document.getElementById('durum');
+const btn=document.getElementById('baslaBtn');
+const not=document.getElementById('not');
+
+function durumYaz(t){ durum.textContent=t; }
+
+async function basla(){
+  if(calisiyorMu){ bitir(); return; }
+  btn.disabled=true; durumYaz('Hazırlanıyor...'); not.textContent='';
+  try{
+    // 1) Sunucudan geçici oturum al
+    const or=await fetch(SERVER+'/sesli-oturum',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kullaniciAdi})});
+    const oturum=await or.json();
+    if(!or.ok || !oturum.client_secret || !oturum.client_secret.value){ throw new Error('oturum alınamadı'); }
+    const EPHEMERAL=oturum.client_secret.value;
+
+    // 2) Mikrofonu aç
+    mikrofon=await navigator.mediaDevices.getUserMedia({audio:true});
+
+    // 3) WebRTC bağlantısı kur
+    pc=new RTCPeerConnection();
+    const sesEl=document.createElement('audio'); sesEl.autoplay=true;
+    pc.ontrack=(e)=>{ sesEl.srcObject=e.streams[0]; halka.classList.remove('dinliyor'); halka.classList.add('konusuyor'); durumYaz('Eskice konuşuyor...'); };
+    pc.addTrack(mikrofon.getTracks()[0], mikrofon);
+
+    // konuşma bitince dinleme moduna dön
+    const dc=pc.createDataChannel('oai-events');
+    dc.onmessage=(e)=>{ try{ const d=JSON.parse(e.data);
+      if(d.type==='input_audio_buffer.speech_started'){ halka.classList.remove('konusuyor'); halka.classList.add('dinliyor'); durumYaz('Seni dinliyorum...'); }
+      if(d.type==='response.audio.done'||d.type==='response.done'){ halka.classList.remove('konusuyor'); halka.classList.add('dinliyor'); durumYaz('Seni dinliyorum...'); }
+    }catch(x){} };
+
+    const offer=await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    const sdpRes=await fetch('https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview',{
+      method:'POST', body:offer.sdp,
+      headers:{ 'Authorization':'Bearer '+EPHEMERAL, 'Content-Type':'application/sdp' }
+    });
+    const answer={ type:'answer', sdp: await sdpRes.text() };
+    await pc.setRemoteDescription(answer);
+
+    calisiyorMu=true; btn.disabled=false;
+    btn.textContent='■ Bitir'; btn.classList.remove('basla'); btn.classList.add('bitir');
+    halka.classList.add('dinliyor'); durumYaz('Seni dinliyorum...');
+  }catch(err){
+    console.error(err);
+    durumYaz('Bağlanamadı, tekrar dene.'); not.textContent='Bir sorun oldu: '+(err.message||'bilinmiyor');
+    btn.disabled=false; temizle();
+  }
+}
+
+function temizle(){
+  try{ if(pc) pc.close(); }catch(e){}
+  try{ if(mikrofon) mikrofon.getTracks().forEach(t=>t.stop()); }catch(e){}
+  pc=null; mikrofon=null; calisiyorMu=false;
+  halka.classList.remove('dinliyor','konusuyor');
+}
+function bitir(){
+  temizle();
+  btn.textContent='🎙️ Konuşmaya başla'; btn.classList.remove('bitir'); btn.classList.add('basla');
+  durumYaz('Konuşma bitti. Yeniden başlayabilirsin.');
+}
+
+btn.onclick=basla;
+</script>
+</body>
+</html>
