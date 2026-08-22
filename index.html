@@ -24,6 +24,7 @@
   .eskice .ad{font-family:'Cormorant Garamond',serif;color:var(--bronz);font-size:17px;margin-bottom:4px;letter-spacing:1px}
   .durum{align-self:center;font-size:14px;color:var(--bronz);font-style:italic;padding:6px}
   .foto{max-width:200px;border-radius:10px;margin-top:8px;display:block}
+  .uretilen{max-width:100%;border-radius:12px;margin-top:10px;display:block;border:1px solid var(--bronz)}
   footer{border-top:1px solid var(--line);padding:12px;background:rgba(244,236,216,.65)}
   .bar{display:flex;gap:8px;align-items:flex-end}
   textarea{flex:1;background:rgba(255,253,247,.92);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--yazi);font-family:'EB Garamond',serif;font-size:16px;resize:none;max-height:120px}
@@ -31,9 +32,6 @@
   textarea::placeholder{color:#a9967a}
   .ikon{width:46px;height:46px;border-radius:12px;border:1px solid var(--line);background:rgba(251,245,233,.9);color:var(--bronz);font-size:20px;cursor:pointer;flex-shrink:0}
   .ikon:hover{border-color:var(--bronz)}
-  .mikro{width:60px;height:60px;font-size:26px}
-  .mikro.dinliyor{background:var(--bronz);color:#fbf5e9;animation:nabiz 1.2s infinite}
-  @keyframes nabiz{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
   .gonder{background:linear-gradient(180deg,#a97c46,#8a6435);color:#fbf5e9;border:none}
   #onizleme{margin-bottom:8px;display:none}
   #onizleme img{max-height:70px;border-radius:8px;border:1px solid var(--bronz)}
@@ -56,8 +54,7 @@
     <div class="bar">
       <button class="ikon" id="fotoBtn" title="Fotoğraf">📷</button>
       <input type="file" id="fotoInput" accept="image/*" style="display:none">
-      <textarea id="giris" rows="1" placeholder="Yaz ya da mikrofona bas..."></textarea>
-      <button class="ikon mikro" id="mikBtn" title="Konuş">🎤</button>
+      <textarea id="giris" rows="1" placeholder="Buraya yaz..."></textarea>
       <button class="ikon gonder" id="gonderBtn" title="Gönder">➤</button>
     </div>
   </footer>
@@ -70,17 +67,16 @@ const giris = document.getElementById('giris');
 let gecmis = [];
 let seciliFoto = null;
 
-/* Ayarlardan oku */
 const kullaniciAdi = (localStorage.getItem('eskice_isim')||'').trim();
-let sesliMod = localStorage.getItem('eskice_ses') !== 'kapali'; // Ayarlar'da kapalıysa okuma yok
 
-function ekle(rol, metin, fotoUrl){
+function ekle(rol, metin, fotoUrl, uretilenUrl){
   const d = document.createElement('div');
   d.className = 'msg ' + (rol==='eskice'?'eskice':'ben');
   let ic = '';
   if(rol==='eskice') ic += '<div class="ad">Eskice</div>';
   ic += metin.replace(/</g,'&lt;');
   if(fotoUrl) ic += '<img class="foto" src="'+fotoUrl+'">';
+  if(uretilenUrl) ic += '<img class="uretilen" src="'+uretilenUrl+'">';
   d.innerHTML = ic;
   chat.appendChild(d);
   chat.scrollTop = chat.scrollHeight;
@@ -98,8 +94,8 @@ document.getElementById('fotoInput').onchange = (e)=>{
   r.readAsDataURL(f);
 };
 
-async function gonder(metinDisari){
-  const metin=(metinDisari!==undefined?metinDisari:giris.value).trim();
+async function gonder(){
+  const metin=giris.value.trim();
   if(!metin && !seciliFoto) return;
   ekle('ben', metin || '(fotoğraf)', seciliFoto?seciliFoto.url:null);
   giris.value=''; document.getElementById('onizleme').style.display='none';
@@ -110,54 +106,18 @@ async function gonder(metinDisari){
       body:JSON.stringify({question:metin,dosya:foto?{data:foto.data,type:foto.type}:null,gecmis,kullaniciAdi})});
     const j=await r.json();
     const cevap=j.answer||j.error||'Bir şey ters gitti.';
-    durumSil(); ekle('eskice',cevap);
+    durumSil(); ekle('eskice',cevap,null,j.uretilenGorsel||null);
     gecmis.push({rol:'ben',metin:metin||'(fotoğraf)'}); gecmis.push({rol:'eskice',metin:cevap});
-    konus(cevap);
   }catch(err){ durumSil(); ekle('eskice','Bağlanamadım, birazdan tekrar dene.'); }
 }
 document.getElementById('gonderBtn').onclick=()=>gonder();
 giris.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();gonder();}});
 
-/* Konuşma tanıma */
-const Tanima=window.SpeechRecognition||window.webkitSpeechRecognition;
-let taniyici=null, dinliyor=false;
-if(Tanima){
-  taniyici=new Tanima();
-  taniyici.lang='tr-TR'; taniyici.continuous=false; taniyici.interimResults=false;
-  taniyici.onstart=()=>{ dinliyor=true; document.getElementById('mikBtn').classList.add('dinliyor'); durumGoster('🎙 Dinliyorum, konuş...'); };
-  taniyici.onresult=(e)=>{ const soz=e.results[0][0].transcript; if(soz&&soz.trim()){ durumSil(); gonder(soz); } };
-  taniyici.onend=()=>{ dinliyor=false; document.getElementById('mikBtn').classList.remove('dinliyor'); };
-  taniyici.onerror=()=>{ dinliyor=false; document.getElementById('mikBtn').classList.remove('dinliyor'); durumSil(); };
-}
-function dinle(){ if(!taniyici||dinliyor) return; try{ taniyici.start(); }catch(e){} }
-
-/* Sesli okuma + okuyunca tekrar dinle */
-function konus(metin){
-  if(!sesliMod){ return; }
-  try{
-    window.speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(metin);
-    u.lang='tr-TR'; u.rate=1; u.pitch=1;
-    u.onend=()=>{ dinle(); };
-    window.speechSynthesis.speak(u);
-  }catch(e){ dinle(); }
-}
-
-document.getElementById('mikBtn').onclick=()=>{ window.speechSynthesis.cancel(); dinle(); };
-
-/* AÇILINCA */
 window.addEventListener('load', ()=>{
   const selam = kullaniciAdi
-    ? ('Merhaba '+kullaniciAdi+', ben buradayım. Seni dinliyorum, buyur.')
-    : 'Merhaba, ben buradayım. Seni dinliyorum, buyur.';
+    ? ('Merhaba '+kullaniciAdi+', ben buradayım. Buyur, seni dinliyorum.')
+    : 'Merhaba, ben buradayım. Buyur, seni dinliyorum.';
   ekle('eskice', selam);
-  function baslat(){
-    konus(selam);
-    document.removeEventListener('click', baslat);
-    document.removeEventListener('touchstart', baslat);
-  }
-  document.addEventListener('click', baslat);
-  document.addEventListener('touchstart', baslat);
 });
 </script>
 </body>
